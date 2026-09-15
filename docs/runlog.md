@@ -149,3 +149,14 @@ uv run python rocket/train.py --eval  →  soft landings: 93% of 100 episodes
 M4, 16 GB, disk free: 4.7 GB at start → 1.8 GB (swap 14 GB, not the scan) → 6.2 GB after `uv cache prune`
 data/ cache: 10–40 MB (2 MB per sector file, deleted after use)
 ```
+
+### Live sky page (ADR-006), 21:30
+```
+uv run python - # bulk positions test: 200 TIC ids → 200 rows in 3.4 s (ra, dec, Tmag)
+launchctl bootstrap gui/$(id -u) ~/Library/LaunchAgents/com.aerospace.sky.plist
+:7420 was already owned by a node server + another python → moved to :7425
+GET /data → http 200 in 0.04 s; rows 1459, placed 1455
+screenshot: the sector-1 footprint is a curved strip of southern sky; 4 gold = known planets
+  (TOI 122.01, 134.01, 138.01, 141.01 rediscovered blind), 2 red = NEW under investigation
+scan rate while 3 looks + sky page compete for the CPU: 19–23 stars/min (32 alone)
+```
