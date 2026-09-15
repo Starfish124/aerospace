@@ -94,3 +94,9 @@ One entry per milestone. What we did, why, and what surprised us. Read this when
 **The rule that was missing.** A significant brightening at phase 0.5 now rejects. Two other habits came out of it: every NEW gets its Gaia variability class attached, and a full multi-sector look now writes its own verdict (`data/looks.csv`) that outranks the single-sector scan on the sky page and in the report. In one sector the brightening was only 1.6σ; it took 24 sectors to see it at 4σ. More data does not just confirm, it also kills.
 
 **Scoreboard after 3,305 stars.** 13 KNOWN rediscovered blind, 2 false NEW killed by the look (a community TOI, a spinning star), 1 NEW under the look (TIC 197570458: 7.6-day, 4.9 % deep, ~13 R_earth around a 0.55 R_sun star).
+
+## Four candidates, four explanations (2026-09-16, 00:30)
+
+TIC 159693368 was the fourth NEW of the night: a 2-day, 1.75 % dip that would be a 2.6-Earth-radius planet if the star were normal. The star is a hot subdwarf, the exposed helium core of a star that lost its envelope, 31,000 K and a fifth the size of the Sun. With six sectors instead of one the look saw a secondary eclipse a fifth as deep as the primary: two stars, not a planet.
+
+**Pattern of the night.** Every one of the four survivors was real, periodic, and physical. None was a planet nobody knew about. The order in which they died: catalog (CTOI), more data (rotation seen at 4σ only after 24 sectors), catalog (TESS EB list), more data (secondary seen only with 6 sectors). The vet now asks four lists, Gaia, and SIMBAD before it says NEW, and a look outranks the scan. Tomorrow's NEW, if any, will have survived all of that.

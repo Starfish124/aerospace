@@ -227,3 +227,14 @@ page: full-height map, scroll zoom / drag pan / double-click reset, RA (hours) �
       dashed crosshair on the star being examined, evidence panel fixed to the right column, rejection
       reasons as a list. Layout bug on first try: panel landed in the left column (no grid-column set).
 ```
+
+### TIC 159693368: a hot subdwarf binary, 00:30
+```
+TIC: Teff 31,000 K, 0.18 R_sun, 789 pc, Tmag 15.1;  SIMBAD: EC 21101-4027 (HS* = hot subdwarf)
+uv run aerospace look TIC159693368 --sector 1
+6 sectors; seed P=2.0080 d depth 17509 ppm snr 12.8 sde 8.4
+all sectors refined: P=2.0058 d depth 9892 ppm snr 16.3 sde 7.1 n=69
+→ REJECTED by the look itself: secondary eclipse 20 % of primary (3.2σ) = eclipsing binary; recovered 4/6 sectors
+vet.py now also attaches the SIMBAD name + object type to every NEW. Scan restarted with it.
+Scoreboard after ~4,000 stars: 17 KNOWN, 0 NEW, 4 NEW-then-explained (CTOI, spinning star, catalogued EB, sdB binary)
+```
