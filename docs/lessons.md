@@ -63,3 +63,12 @@ One entry per milestone. What we did, why, and what surprised us. Read this when
 3. *Run 3, 97 % then 89 %:* the 30-episode checkpoint flattered it, and PPO wobbles from one checkpoint to the next. Fix: judge on 100 episodes and keep only the best checkpoint. Best-of-run reached 93 %.
 
 **The lesson that transfers.** Every bug was in the reward, not the physics or the algorithm. Designing the scoreboard is the whole job; the learning itself is a library call.
+
+## The sky page, and a memory lesson (2026-09-15, late)
+
+**What we did.** ADR-006: one live page on :7425. The scan now writes what it sees for every star (light curve, periodogram, fold) and the page draws it as it happens; known and new stars keep their evidence so you can click them. Stars are placed from the TIC catalog in bulk, 200 positions in 3.4 s.
+
+**What surprised us.**
+- Three "look at every sector" jobs ran at once and the machine killed all three for memory. The BLS period grid gets denser with the square of the time span: one sector is 27 days, thirty-three sectors is three years, so the grid grew by a factor of ~10,000. Fix: on long baselines only refine in a ±1 % window around the period one sector already found. Same physics, a thousandth of the memory.
+- The pipeline's own throughput was being halved by those looks. When they died the scan doubled its rate. Contention is invisible until you measure the rate.
+- Port 7420 was already taken by another project's server; the sky page silently answered 404s from a stranger. Always `lsof` a port before trusting a 200 or a 404 from it.
