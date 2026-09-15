@@ -84,3 +84,13 @@ One entry per milestone. What we did, why, and what surprised us. Read this when
 **The habit to keep.** Before calling anything new, go looking for the reason it is not. The moment of "wait, why has nobody seen this" is a prompt to search harder, not to celebrate.
 
 **Scoreboard after 3,025 stars.** 12 known planets or candidates rediscovered blind (TOI 122, 134, 138, 141 and eight more, sizes from 1.5 to 16 Earth radii), 1 stellar companion rejected by its implied 26 Earth-radius size, 1 NEW left under the look (TIC 308452910, a 0.53-day signal around a small red star).
+
+## The second survivor was a spinning star (2026-09-15, 23:30)
+
+**What happened.** TIC 308452910: same 0.5313-day dip in 24 of 24 sectors, 1,048 transits, SNR 72, no catalog match. A 2-Earth-radius world on a 13-hour orbit around a small red star would be a real find.
+
+**What it was.** A spotted star rotating every 13 hours. Gaia DR3 lists it as a "solar-like" variable. The fold shows a broad, rounded dimming with no flat bottom, and the star is *brighter* at phase 0.5 at 4σ. A transit can only remove light; it can never add light half an orbit later. A star spot going round the back does exactly that.
+
+**The rule that was missing.** A significant brightening at phase 0.5 now rejects. Two other habits came out of it: every NEW gets its Gaia variability class attached, and a full multi-sector look now writes its own verdict (`data/looks.csv`) that outranks the single-sector scan on the sky page and in the report. In one sector the brightening was only 1.6σ; it took 24 sectors to see it at 4σ. More data does not just confirm, it also kills.
+
+**Scoreboard after 3,305 stars.** 13 KNOWN rediscovered blind, 2 false NEW killed by the look (a community TOI, a spinning star), 1 NEW under the look (TIC 197570458: 7.6-day, 4.9 % deep, ~13 R_earth around a 0.55 R_sun star).

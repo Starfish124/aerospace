@@ -14,8 +14,13 @@ REPORTS = Path(__file__).resolve().parent.parent / "reports"
 def report() -> str:
     lines = [f"aerospace transit report {date.today()}", ""]
     new = []
+    looks = DATA / "looks.csv"
+    over = {r["tic"]: r for r in csv.DictReader(looks.open())} if looks.exists() else {}
     for csvf in sorted(DATA.glob("scan_*.csv")):
         rows = list(csv.DictReader(csvf.open()))
+        for r in rows:
+            if r["tic"] in over:
+                r["label"] = over[r["tic"]]["label"]; r["reasons"] = f"look {over[r['tic']]['recovered']} sectors: " + over[r["tic"]]["reasons"]
         sector = csvf.stem.split("_")[1]
         c = Counter(r["label"] for r in rows)
         total = len(targets(int(sector)))

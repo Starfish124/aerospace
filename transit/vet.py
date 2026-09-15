@@ -80,6 +80,29 @@ def implied_radius_earth(depth: float, r_star: float) -> float:
     return depth ** 0.5 * r_star * 109.1  # R_sun -> R_earth
 
 
+@lru_cache(maxsize=4096)
+def gaia_variability(ra: float, dec: float) -> str | None:
+    """Gaia DR3 variability class within 3 arcsec (e.g. ECL, SOLAR_LIKE, RS), None if unclassified."""
+    try:
+        from astroquery.vizier import Vizier
+        from astropy.coordinates import SkyCoord
+        import astropy.units as u
+        q = Vizier(row_limit=1).query_region(SkyCoord(ra, dec, unit="deg"), radius=3 * u.arcsec, catalog="I/358/vclassre")
+        return str(q[0]["Class"][0]) if q else None
+    except Exception:
+        return None
+
+
+@lru_cache(maxsize=4096)
+def star_position(tic: int):
+    from astroquery.mast import Catalogs
+    try:
+        t = Catalogs.query_criteria(catalog="TIC", ID=tic)
+        return float(t["ra"][0]), float(t["dec"][0])
+    except Exception:
+        return None
+
+
 def _period_match(p, q):
     return q > 0 and any(abs(p - k * q) / (k * q) < 0.01 for k in (1, 2, 0.5))
 
@@ -115,6 +138,8 @@ def vet(target: str, c: Candidate) -> Verdict:
     sec_rel = sec_depth / max(c.depth, 1e-12)
     if sec > SIGMA and sec_rel > SECONDARY_REL:
         ok = False; reasons.append(f"secondary eclipse {sec_rel:.0%} of primary ({sec:.1f}σ): eclipsing binary")
+    elif sec < -SIGMA:  # brighter at phase 0.5: a sine (spots, ellipsoidal), never a transit
+        ok = False; reasons.append(f"brightening at phase 0.5 ({sec:.1f}σ): rotational modulation, not a transit")
     else:
         reasons.append(f"secondary {sec_rel:.1%} ({sec:.1f}σ)")
     if not ok:
@@ -143,4 +168,11 @@ def vet(target: str, c: Candidate) -> Verdict:
             return Verdict(True, "KNOWN", reasons)
     if len(rows):
         reasons.append(f"TIC has TOI(s) {', '.join(map(str, rows['TOI']))} at other periods")
+    pos = star_position(tic)
+    var = gaia_variability(*pos) if pos else None
+    if var == "ECL":
+        reasons.append("Gaia DR3 class ECL: eclipsing binary")
+        return Verdict(False, "REJECTED", reasons)
+    if var:
+        reasons.append(f"Gaia DR3 variability class {var}")
     return Verdict(True, "NEW", reasons)

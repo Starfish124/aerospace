@@ -30,6 +30,13 @@ def _scan_rows():
             rows += list(csv.DictReader(f.open()))
         except Exception:
             pass
+    looks = DATA / "looks.csv"
+    if looks.exists():  # a full multi-sector look outranks the single-sector scan verdict
+        over = {r["tic"]: r for r in csv.DictReader(looks.open())}
+        for r in rows:
+            o = over.get(r["tic"])
+            if o:
+                r["label"] = o["label"]; r["reasons"] = f"look {o['recovered']} sectors: " + o["reasons"]
     return rows
 
 

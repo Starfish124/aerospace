@@ -200,3 +200,15 @@ re-vet of all NEW/ERROR rows with the full vet (scan stopped for the rewrite, th
   3 ERROR → REJECTED on retry (they were MAST connection drops)
 after 3,025 stars: 12 KNOWN, 1 NEW, 0 ERROR
 ```
+
+### TIC 308452910: the spinning star, 23:20
+```
+uv run aerospace look TIC308452910 --sector 1
+25 sectors; seed P=0.5315 d depth 2309 ppm snr 17 sde 8.2
+all sectors refined: P=0.5313 d depth 1911 ppm snr 71.9 sde 9.2 n=1048; secondary -5.7% (-4.0σ)
+recovered in 24/24 sectors
+TIC: Teff 3501 K, 0.44 R_sun M dwarf, Tmag 12.8;  SIMBAD: 2MASS J08024935-6540071 (high proper motion star)
+Gaia DR3 variability: SOLAR_LIKE (rotational modulation)   TESS EB catalog: no match
+→ REJECTED: brightening at phase 0.5. New vet rule; recorded in data/looks.csv (overrides scan label)
+sky counts after: REJECTED 3314, KNOWN 13, NEW 1 (TIC 197570458, look running)
+```

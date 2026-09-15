@@ -36,3 +36,9 @@ def test_implied_radius():
     assert 1.5 < implied_radius_earth(226e-6, 1.10) < 2.5      # Pi Men c is ~2 R_earth
     assert 11 < implied_radius_earth(9474e-6, 1.23) < 15       # WASP-18 b is ~1.2 R_jup
     assert implied_radius_earth(0.053, 1.0) > 22                # 5 % deep on a Sun = a star
+
+
+def test_brightening_at_phase_half_rejected():
+    st = {"harmonic_delta_log_likelihood": -1, "depth_odd": (2e-3, 1e-4), "depth_even": (2e-3, 1e-4), "depth_phased": (-5e-4, 1e-4)}
+    v = vet("TIC1", Candidate(0.53, 0.0, 0.08, 2e-3, 20.0, 9.0, 50, st))
+    assert v.label == "REJECTED" and "rotational" in str(v), str(v)

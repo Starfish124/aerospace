@@ -12,6 +12,21 @@ from transit.search import search, refine, FLATTEN_WINDOW
 from transit.vet import vet
 
 
+LOOKS = DATA / "looks.csv"
+
+
+def record(target, c, verdict, hit, n):
+    """Append the look's verdict; the sky page and report prefer it over the single-sector scan label."""
+    import csv
+    new = not LOOKS.exists()
+    with LOOKS.open("a", newline="") as f:
+        w = csv.writer(f)
+        if new:
+            w.writerow(["tic", "label", "period", "depth", "snr", "sde", "recovered", "reasons"])
+        w.writerow([target.upper().replace("TIC", ""), verdict.label, round(c.period, 5), round(c.depth * 1e6),
+                    round(c.snr, 1), round(c.sde, 1), f"{hit}/{n}", "; ".join(verdict.reasons)])
+
+
 def look(target: str, sector: int | None = None) -> dict:
     """`sector` = where the candidate was found; its period seeds the multi-sector refinement."""
     result = lk.search_lightcurve(target, author="SPOC", cadence=120)
@@ -35,6 +50,7 @@ def look(target: str, sector: int | None = None) -> dict:
         hits.append(hit is not None)
         print(f"  sector {s:3d}: {'same period, sde %.1f' % hit.sde if hit else 'not found (best ' + f'{cs[0].period:.3f} d)'}", flush=True)
     print(f"recovered in {sum(hits)}/{len(hits)} sectors")
+    record(target, c, verdict, sum(hits), len(hits))
     flat = lc_all.flatten(window_length=FLATTEN_WINDOW)
     folded = flat.fold(period=c.period, epoch_time=c.t0)
     ax = folded.scatter(s=1, alpha=0.3, label=f"P={c.period:.4f} d")
