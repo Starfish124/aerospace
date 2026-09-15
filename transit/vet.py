@@ -1,5 +1,6 @@
 """Candidate -> verdict. Kills false positives, then asks the TOI catalog if it is Known or New."""
 import time
+from functools import lru_cache
 import urllib.request
 from dataclasses import dataclass
 
@@ -11,6 +12,8 @@ from transit.search import Candidate
 TOI_URL = "https://exofop.ipac.caltech.edu/tess/download_toi.php?sort=toi&output=csv"
 TOI_CSV = DATA / "toi.csv"
 SNR_FLOOR = 7.0
+SDE_FLOOR = 8.0      # calibrated 2026-09-15: WASP-18 b 9.3, Pi Men c 10.0; 14 false positives all < 7.2
+MIN_TRANSITS = 3     # one or two dips is a glitch or a single event, not a period
 SIGMA = 3.0
 # Relative thresholds matter more than sigma: at SNR 600 a 10 % odd/even wobble is 40σ but still a planet.
 # Eclipsing binaries show odd/even off by ~2x and secondaries of tens of percent.
@@ -28,6 +31,7 @@ class Verdict:
         return f"{self.label}: " + "; ".join(self.reasons)
 
 
+@lru_cache(maxsize=1)
 def toi_table() -> pd.DataFrame:
     """TOI catalog, refreshed when older than a day."""
     DATA.mkdir(exist_ok=True)
@@ -48,6 +52,14 @@ def vet(target: str, c: Candidate) -> Verdict:
         ok = False; reasons.append(f"snr {c.snr:.1f} < {SNR_FLOOR}")
     else:
         reasons.append(f"snr {c.snr:.1f}")
+    if c.sde < SDE_FLOOR:
+        ok = False; reasons.append(f"sde {c.sde:.1f} < {SDE_FLOOR}: peak does not stand out")
+    else:
+        reasons.append(f"sde {c.sde:.1f}")
+    if c.n_transits < MIN_TRANSITS:
+        ok = False; reasons.append(f"only {c.n_transits} transit(s) with data")
+    if st["harmonic_delta_log_likelihood"] > 0:
+        ok = False; reasons.append("a sine fits better than a box: variable star, not a transit")
     oe = _sig(st["depth_odd"], st["depth_even"])
     oe_rel = abs(st["depth_odd"][0] - st["depth_even"][0]) / max(c.depth, 1e-12)
     if oe > SIGMA and oe_rel > ODD_EVEN_REL:

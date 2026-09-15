@@ -16,10 +16,12 @@ class Candidate:
     duration: float
     depth: float  # fractional, e.g. 0.01 = 1 %
     snr: float
+    sde: float  # how much the best peak stands out from the rest of the periodogram
+    n_transits: int  # transits that actually have data
     stats: dict = field(default_factory=dict, repr=False)  # astropy compute_stats, used by vet
 
     def __str__(self):
-        return f"P={self.period:.4f} d  depth={self.depth*1e6:.0f} ppm  dur={self.duration*24:.1f} h  snr={self.snr:.1f}"
+        return f"P={self.period:.4f} d  depth={self.depth*1e6:.0f} ppm  dur={self.duration*24:.1f} h  snr={self.snr:.1f}  sde={self.sde:.1f}  n={self.n_transits}"
 
 
 def search(lc, top=3) -> list[Candidate]:
@@ -32,6 +34,7 @@ def search(lc, top=3) -> list[Candidate]:
                              frequency_factor=1.0)
     res = bls.power(periods, DURATIONS, objective="snr")
     order = np.argsort(res.power)[::-1]
+    sde_all = (res.power - np.mean(res.power)) / np.std(res.power)
     out = []
     for i in order:
         p = res.period[i]
@@ -39,7 +42,8 @@ def search(lc, top=3) -> list[Candidate]:
             continue  # same peak, neighbouring grid point
         stats = bls.compute_stats(p, res.duration[i], res.transit_time[i])
         out.append(Candidate(float(p), float(res.transit_time[i]), float(res.duration[i]),
-                             float(res.depth[i]), float(stats["depth"][0] / stats["depth"][1]), stats))
+                             float(res.depth[i]), float(stats["depth"][0] / stats["depth"][1]),
+                             float(sde_all[i]), int(np.sum(stats["per_transit_count"] > 0)), stats))
         if len(out) == top:
             break
     return out

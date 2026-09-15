@@ -33,6 +33,11 @@ def cmd_vet(a):
     print(vet(a.target, c))
 
 
+def cmd_scan(a):
+    from transit.scan import scan
+    print("wrote", scan(a.sector, a.limit, a.workers))
+
+
 def main():
     p = argparse.ArgumentParser(prog="aerospace")
     sub = p.add_subparsers(dest="cmd", required=True)
@@ -48,5 +53,10 @@ def main():
     s.add_argument("target")
     s.add_argument("--sector", type=int, default=None)
     s.set_defaults(fn=cmd_vet)
+    s = sub.add_parser("scan", help="scan every 2-min target in a sector, streaming")
+    s.add_argument("sector", type=int)
+    s.add_argument("--limit", type=int, default=None)
+    s.add_argument("--workers", type=int, default=4)
+    s.set_defaults(fn=cmd_scan)
     a = p.parse_args()
     a.fn(a)

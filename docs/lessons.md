@@ -28,3 +28,12 @@ One entry per milestone. What we did, why, and what surprised us. Read this when
 - Sigma alone is the wrong threshold at high SNR. WASP-18 b's odd/even depths differ by 11 %, which is 38σ because the error bars are tiny. A 3σ rule rejected the most obvious planet in the sky. The fix is a relative threshold on top of sigma: reject only when the difference is both significant and large.
 - WASP-18 b has a real secondary eclipse of 315 ppm (the planet's own dayside going behind the star), 21σ. A planet can have a secondary; a binary has a big one. Same lesson: relative, not absolute.
 - The 11 % odd/even wobble itself is our detrending distorting a 0.94-day planet. Noted in code as a `ponytail:` ceiling; masking transits before flattening is the upgrade.
+
+## A4: scanning a whole sector on the mini (2026-09-15)
+
+**What we did.** `scan.py` reads MAST's own bulk-download script for a sector (15,889 targets for sector 1), then for each star: download the 2 MB file, search, vet, write one CSV row, delete the file. Four threads. Resumable: rerunning skips stars already in the CSV. Measured: 40 stars in 54 s, so a sector is ~6 hours. Disk stays at a few MB.
+
+**What surprised us.**
+- The first sample called 14 of 40 stars NEW. Real rate for planets is under 1 %. The vetting from A3 was calibrated on two bright planets and never on noise. Lesson: a filter is only calibrated once it has seen what it must reject.
+- Three standard checks fixed it, and the numbers separated cleanly. SDE (how far the best peak stands above the rest of the periodogram): real planets 9.3 and 10.0, every false positive under 7.2. Transit count: seven of the fourteen had one or two dips, which is a glitch, not a period. Sine-vs-box: astropy reports whether a sinusoid fits better than a box; variable stars pulsing every half day were being called planets at exactly the shortest period we search.
+- BLS "SNR" alone is misleading on noisy stars: it will always find *some* box. SDE asks the better question: is this box special compared with every other box it tried.
