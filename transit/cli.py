@@ -48,6 +48,18 @@ def cmd_nightly(a):
     nightly()
 
 
+def cmd_ascent(a):
+    from dataclasses import replace
+    from rocket.ascent import FALCON9, fly
+    v = replace(FALCON9, payload=a.payload)
+    dv = v.ideal_dv()
+    print("ideal dv per stage: " + "  ".join(f"{d:.0f}" for d in dv) + f"  total {sum(dv):.0f} m/s")
+    f = fly(v, kick_deg=a.kick)
+    print(f)
+    for row in f.log[::6]:
+        print("  t=%4ds  alt=%4d km  v=%5d m/s" % row)
+
+
 def main():
     p = argparse.ArgumentParser(prog="aerospace")
     sub = p.add_subparsers(dest="cmd", required=True)
@@ -70,5 +82,9 @@ def main():
     s.set_defaults(fn=cmd_scan)
     sub.add_parser("report", help="summarise all scans into reports/<date>.txt").set_defaults(fn=cmd_report)
     sub.add_parser("nightly", help="scan the next sector, write and commit the report").set_defaults(fn=cmd_nightly)
+    s = sub.add_parser("ascent", help="fly a Falcon 9-class rocket to orbit, print the delta-v budget")
+    s.add_argument("--payload", type=float, default=16_000)
+    s.add_argument("--kick", type=float, default=2.0)
+    s.set_defaults(fn=cmd_ascent)
     a = p.parse_args()
     a.fn(a)

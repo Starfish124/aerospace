@@ -37,3 +37,16 @@ One entry per milestone. What we did, why, and what surprised us. Read this when
 - The first sample called 14 of 40 stars NEW. Real rate for planets is under 1 %. The vetting from A3 was calibrated on two bright planets and never on noise. Lesson: a filter is only calibrated once it has seen what it must reject.
 - Three standard checks fixed it, and the numbers separated cleanly. SDE (how far the best peak stands above the rest of the periodogram): real planets 9.3 and 10.0, every false positive under 7.2. Transit count: seven of the fourteen had one or two dips, which is a glitch, not a period. Sine-vs-box: astropy reports whether a sinusoid fits better than a box; variable stars pulsing every half day were being called planets at exactly the shortest period we search.
 - BLS "SNR" alone is misleading on noisy stars: it will always find *some* box. SDE asks the better question: is this box special compared with every other box it tried.
+
+## B1: ascent calculator (2026-09-15)
+
+**What we did.** `rocket/ascent.py` holds a Falcon 9 built from public numbers (two stages: dry mass, propellant, thrust, Isp). Two things come out. The **ideal delta-v** from the rocket equation, 8916 m/s for the 22.8 t payload. And a **flown** ascent: 2D, round Earth, exponential atmosphere, 0.1 s steps. Stage 1 does a gravity turn after one small pitch kick; stage 2 holds a climb rate toward 200 km and cuts off at circular speed. `uv run aerospace ascent --payload 16000 --kick 2`.
+
+**The rocket equation in one line.** delta-v = Isp × g0 × ln(full mass / empty mass). Fuel buys speed logarithmically: doubling the fuel does not double the speed. That log is the wall ADR-003 talks about; no fuel choice removes it, a better Isp only shifts it.
+
+**Where the speed goes.** Orbit needs ~7800 m/s. The flight delivers 9721 m/s of ideal thrust and loses 1389 to gravity (thrusting upward while gravity pulls down), 22 to drag (surprisingly small: the rocket is out of thick air in a minute) and 482 to steering (the controller pitching off the velocity vector). What is left, 7816, matches the burnout speed to 1 %: the bookkeeping closes, so the sim is not hiding energy.
+
+**What surprised us.**
+- A pure gravity turn is knife-edge: kick 2.0° almost orbits, 2.5° falls back into the atmosphere. That is why every real upper stage steers closed-loop. Ten lines of altitude-hold made insertion robust.
+- Drag is nearly irrelevant to the budget; gravity loss is 60× bigger. Rockets go up first to escape drag, then sideways to escape gravity loss.
+- We make orbit with 16 t, SpaceX advertises 22.8 t. The gap is our crude steering (482 m/s wasted) and no fairing separation. Marked as the `ponytail:` ceiling: a real guidance law is the upgrade.
