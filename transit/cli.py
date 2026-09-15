@@ -24,6 +24,15 @@ def cmd_search(a):
         print(f"{i}. {c}")
 
 
+def cmd_vet(a):
+    from transit.fetch import fetch
+    from transit.search import search
+    from transit.vet import vet
+    c = search(fetch(a.target, a.sector))[0]
+    print(c)
+    print(vet(a.target, c))
+
+
 def main():
     p = argparse.ArgumentParser(prog="aerospace")
     sub = p.add_subparsers(dest="cmd", required=True)
@@ -35,5 +44,9 @@ def main():
     s.add_argument("target")
     s.add_argument("--sector", type=int, default=None)
     s.set_defaults(fn=cmd_search)
+    s = sub.add_parser("vet", help="vet the strongest candidate and check the TOI catalog")
+    s.add_argument("target")
+    s.add_argument("--sector", type=int, default=None)
+    s.set_defaults(fn=cmd_vet)
     a = p.parse_args()
     a.fn(a)

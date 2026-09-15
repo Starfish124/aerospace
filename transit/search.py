@@ -1,5 +1,5 @@
 """Light curve -> candidates. Detrend, then BLS (ADR-004)."""
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 
 import numpy as np
 from astropy.timeseries import BoxLeastSquares
@@ -16,6 +16,7 @@ class Candidate:
     duration: float
     depth: float  # fractional, e.g. 0.01 = 1 %
     snr: float
+    stats: dict = field(default_factory=dict, repr=False)  # astropy compute_stats, used by vet
 
     def __str__(self):
         return f"P={self.period:.4f} d  depth={self.depth*1e6:.0f} ppm  dur={self.duration*24:.1f} h  snr={self.snr:.1f}"
@@ -38,7 +39,7 @@ def search(lc, top=3) -> list[Candidate]:
             continue  # same peak, neighbouring grid point
         stats = bls.compute_stats(p, res.duration[i], res.transit_time[i])
         out.append(Candidate(float(p), float(res.transit_time[i]), float(res.duration[i]),
-                             float(res.depth[i]), float(stats["depth"][0] / stats["depth"][1])))
+                             float(res.depth[i]), float(stats["depth"][0] / stats["depth"][1]), stats))
         if len(out) == top:
             break
     return out
