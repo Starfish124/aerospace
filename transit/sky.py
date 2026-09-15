@@ -68,7 +68,7 @@ canvas{display:block}
 <div class=legend><span><i style="background:#3a4a63"></i>rejected</span><span><i style="background:#f2c14e"></i>known planet</span><span><i style="background:#ff5b5b"></i>NEW</span></div></div>
 <canvas id=c></canvas><div id=ticker></div>
 <script>
-const cv=document.getElementById('c'),cx=cv.getContext('2d');let rows=[],seen=new Set(),flash=[];
+const cv=document.getElementById('c'),cx=cv.getContext('2d');let rows=[],seen=new Set(),flash=[],first=true;
 function size(){cv.width=innerWidth*devicePixelRatio;cv.height=innerHeight*devicePixelRatio;cv.style.width=innerWidth+'px';cv.style.height=innerHeight+'px';cx.setTransform(devicePixelRatio,0,0,devicePixelRatio,0,0)}
 addEventListener('resize',size);size();
 // sky patch bounds: RA is shifted so the sector does not wrap at 0/360
@@ -87,7 +87,7 @@ function draw(){cx.fillStyle='#02040a';cx.fillRect(0,0,innerWidth,innerHeight);
   cx.strokeStyle='rgba(180,220,255,'+a+')';cx.lineWidth=1.5;cx.beginPath();cx.arc(x,y,4+(1-a)*18,0,7);cx.stroke()}
  requestAnimationFrame(draw)}
 async function poll(){try{const d=await (await fetch('/data')).json();
- const fresh=d.rows.filter(r=>!seen.has(r.tic));for(const r of fresh){seen.add(r.tic);if(r.ra!=null)flash.push({r,t:Date.now()+Math.random()*2000})}
+ const fresh=d.rows.filter(r=>!seen.has(r.tic));for(const r of fresh){seen.add(r.tic);if(!first&&r.ra!=null)flash.push({r,t:Date.now()+Math.random()*2000})}first=false;
  rows=d.rows;for(const r of rows)place(r);
  document.getElementById('stat').innerHTML=`sector ${d.sector} · <b>${d.n}</b> / ${d.total} stars · rejected ${d.counts.REJECTED||0} · <span style="color:#f2c14e">known ${d.counts.KNOWN||0}</span> · <span style="color:#ff5b5b">NEW ${d.counts.NEW||0}</span> · ${d.rate} stars/min`;
  document.getElementById('ticker').innerHTML=d.last.map(r=>`<span class="${r.label==='NEW'?'n':r.label==='KNOWN'?'k':''}">TIC${String(r.tic).padEnd(12)} ${r.label.padEnd(9)} P=${(+r.period||0).toFixed(3).padStart(7)} d  depth ${String(r.depth||'').padStart(6)} ppm  snr ${String(r.snr||'').padStart(6)}  ${r.reasons||''}</span>`).join('\n');
