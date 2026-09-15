@@ -60,6 +60,11 @@ def cmd_ascent(a):
         print("  t=%4ds  alt=%4d km  v=%5d m/s" % row)
 
 
+def cmd_look(a):
+    from transit.look import look
+    look(a.target)
+
+
 def main():
     p = argparse.ArgumentParser(prog="aerospace")
     sub = p.add_subparsers(dest="cmd", required=True)
@@ -86,5 +91,8 @@ def main():
     s.add_argument("--payload", type=float, default=16_000)
     s.add_argument("--kick", type=float, default=2.0)
     s.set_defaults(fn=cmd_ascent)
+    s = sub.add_parser("look", help="manual look: fold on the candidate period, check every sector, save PNG")
+    s.add_argument("target")
+    s.set_defaults(fn=cmd_look)
     a = p.parse_args()
     a.fn(a)

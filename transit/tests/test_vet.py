@@ -5,7 +5,7 @@ from transit.vet import vet
 
 def test_pi_men_c_is_known():
     v = vet("TIC261136679", search(fetch("TIC261136679", sectors=1))[0])
-    assert v.label == "KNOWN" and "TOI 144.01" in str(v), str(v)
+    assert v.label == "KNOWN" and "pi Men c" in str(v), str(v)
 
 
 def test_low_snr_rejected():
@@ -15,7 +15,7 @@ def test_low_snr_rejected():
 
 def test_wasp18_b_is_known_despite_real_secondary():
     v = vet("TIC100100827", search(fetch("TIC100100827", sectors=2))[0])
-    assert v.label == "KNOWN" and "TOI 185.01" in str(v), str(v)
+    assert v.label == "KNOWN" and "WASP-18 b" in str(v), str(v)
 
 
 def test_eclipsing_binary_rejected():

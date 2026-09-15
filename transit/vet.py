@@ -11,6 +11,9 @@ from transit.search import Candidate
 
 TOI_URL = "https://exofop.ipac.caltech.edu/tess/download_toi.php?sort=toi&output=csv"
 TOI_CSV = DATA / "toi.csv"
+CONFIRMED_URL = ("https://exoplanetarchive.ipac.caltech.edu/TAP/sync?query="
+                 "select+pl_name,tic_id,pl_orbper+from+ps+where+default_flag=1&format=csv")
+CONFIRMED_CSV = DATA / "confirmed.csv"
 SNR_FLOOR = 7.0
 SDE_FLOOR = 8.0      # calibrated 2026-09-15: WASP-18 b 9.3, Pi Men c 10.0; 14 false positives all < 7.2
 MIN_TRANSITS = 3     # one or two dips is a glitch or a single event, not a period
@@ -38,6 +41,20 @@ def toi_table() -> pd.DataFrame:
     if not TOI_CSV.exists() or time.time() - TOI_CSV.stat().st_mtime > 86400:
         urllib.request.urlretrieve(TOI_URL, TOI_CSV)
     return pd.read_csv(TOI_CSV, usecols=["TIC ID", "TOI", "Period (days)", "TFOPWG Disposition"])
+
+
+@lru_cache(maxsize=1)
+def confirmed_table() -> pd.DataFrame:
+    """NASA Exoplanet Archive confirmed planets with a TIC id, refreshed when older than a day."""
+    if not CONFIRMED_CSV.exists() or time.time() - CONFIRMED_CSV.stat().st_mtime > 86400:
+        urllib.request.urlretrieve(CONFIRMED_URL, CONFIRMED_CSV)
+    df = pd.read_csv(CONFIRMED_CSV).dropna(subset=["tic_id"])
+    df["tic"] = df["tic_id"].str.replace("TIC", "").str.strip().astype(int)
+    return df
+
+
+def _period_match(p, q):
+    return q > 0 and any(abs(p - k * q) / (k * q) < 0.01 for k in (1, 2, 0.5))
 
 
 def _sig(a, b):
@@ -77,13 +94,15 @@ def vet(target: str, c: Candidate) -> Verdict:
         return Verdict(False, "REJECTED", reasons)
 
     tic = int(target.upper().replace("TIC", "").strip())
+    for _, r in confirmed_table().query("tic == @tic").iterrows():  # same period or a harmonic
+        if _period_match(c.period, r["pl_orbper"]):
+            reasons.append(f"confirmed planet {r['pl_name']} (P={r['pl_orbper']:.4f})")
+            return Verdict(True, "KNOWN", reasons)
     rows = toi_table().query("`TIC ID` == @tic")
     for _, r in rows.iterrows():
-        p = r["Period (days)"]
-        for k in (1, 2, 0.5):  # same period or a harmonic
-            if p > 0 and abs(c.period - k * p) / (k * p) < 0.01:
-                reasons.append(f"matches TOI {r['TOI']} (P={p:.4f}, {r['TFOPWG Disposition']})")
-                return Verdict(True, "KNOWN", reasons)
+        if _period_match(c.period, r["Period (days)"]):
+            reasons.append(f"matches TOI {r['TOI']} (P={r['Period (days)']:.4f}, {r['TFOPWG Disposition']})")
+            return Verdict(True, "KNOWN", reasons)
     if len(rows):
         reasons.append(f"TIC has TOI(s) {', '.join(map(str, rows['TOI']))} at other periods")
     return Verdict(True, "NEW", reasons)

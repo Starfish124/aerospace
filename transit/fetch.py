@@ -1,5 +1,5 @@
 """Target -> light curve. Cached under data/, capped at 2 GB."""
-import os
+import time
 import warnings
 from pathlib import Path
 
@@ -22,15 +22,26 @@ def _enforce_cap(root: Path = DATA):
         p.unlink()
 
 
+def retry(fn, tries=3, wait=5):
+    """MAST drops connections now and then; three tries with a pause covers it."""
+    for i in range(tries):
+        try:
+            return fn()
+        except Exception:
+            if i == tries - 1:
+                raise
+            time.sleep(wait)
+
+
 def fetch(target: str, sectors=None) -> lk.LightCurve:
     """Download every SPOC 2-min light curve for a target and stitch them into one.
     `target` is like 'TIC100100827'. `sectors` limits which sectors, None = all."""
     DATA.mkdir(exist_ok=True)
     _enforce_cap()
-    result = lk.search_lightcurve(target, author="SPOC", cadence=120, sector=sectors)
+    result = retry(lambda: lk.search_lightcurve(target, author="SPOC", cadence=120, sector=sectors))
     if len(result) == 0:
         raise ValueError(f"no SPOC 2-min light curve for {target}")
-    lcs = result.download_all(download_dir=str(DATA), quality_bitmask="default")
+    lcs = retry(lambda: result.download_all(download_dir=str(DATA), quality_bitmask="default"))
     # remove_nans + normalize per sector, then stitch so sectors share a baseline
     return lcs.stitch(lambda lc: lc.remove_nans().normalize())
 

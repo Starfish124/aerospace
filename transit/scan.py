@@ -9,7 +9,7 @@ from pathlib import Path
 warnings.filterwarnings("ignore")
 import lightkurve as lk
 
-from transit.fetch import DATA
+from transit.fetch import DATA, retry
 from transit.search import search
 from transit.vet import vet, toi_table
 
@@ -36,7 +36,7 @@ def one(tic: str, url: str, sector: int) -> dict:
     path = DATA / f"scan_{sector}_{tic}.fits"
     row = {"tic": tic, "sector": sector}
     try:
-        urllib.request.urlretrieve(url, path)
+        retry(lambda: urllib.request.urlretrieve(url, path))
         lc = lk.read(path, quality_bitmask="default").remove_nans().normalize()
         c = search(lc, top=1)[0]
         v = vet(f"TIC{tic}", c)
