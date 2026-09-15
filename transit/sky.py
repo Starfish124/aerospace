@@ -64,78 +64,96 @@ def _fill_positions_forever():
 
 HTML = r"""<!doctype html><meta charset=utf-8><title>aerospace sky</title>
 <style>
-html,body{margin:0;background:#02040a;color:#9fb3c8;font:13px/1.4 ui-monospace,Menlo,monospace;overflow:hidden}
-canvas{display:block}
-#hud{position:fixed;top:12px;left:16px;right:16px;display:flex;justify-content:space-between;pointer-events:none}
+html,body{margin:0;height:100%;background:#02040a;color:#9fb3c8;font:13px/1.4 ui-monospace,Menlo,monospace;overflow:hidden}
+#wrap{display:grid;grid-template-columns:1fr 420px;grid-template-rows:44px 1fr 150px;height:100vh}
+#hud{grid-column:1/3;display:flex;align-items:center;justify-content:space-between;padding:0 16px;border-bottom:1px solid #0e1626}
 #hud b{color:#e8eef6;font-weight:600}
-#ticker{position:fixed;left:16px;bottom:12px;width:58%;white-space:pre;color:#6f8399;overflow:hidden}
-#panel{position:fixed;right:16px;top:64px;width:36%;bottom:12px;display:flex;flex-direction:column;gap:6px;pointer-events:none}
-#panel h3{margin:0;font:600 13px ui-monospace,Menlo,monospace;color:#e8eef6}
-#panel .sub{color:#6f8399;white-space:pre-wrap}
-#panel canvas{width:100%;height:23%;background:#050912;border:1px solid #101828;border-radius:4px}
-#panel .lab{color:#6f8399;font-size:11px;margin-top:2px}
-#tip{position:fixed;pointer-events:none;background:#0b1220;border:1px solid #223;padding:4px 7px;border-radius:4px;color:#e8eef6;display:none;white-space:pre}
-#stats{position:fixed;left:16px;bottom:200px;width:58%;color:#6f8399;white-space:pre}
-#ticker .n{color:#ff5b5b}#ticker .k{color:#f2c14e}
 .legend span{margin-left:14px}.legend i{display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:5px;vertical-align:middle}
+#map{grid-column:1;grid-row:2;position:relative;overflow:hidden}#c{display:block;width:100%;height:100%;cursor:grab}
+#hint{position:absolute;left:12px;bottom:8px;color:#3e4f66;font-size:11px}
+#panel{grid-column:2;grid-row:2/4;display:flex;flex-direction:column;gap:6px;padding:10px 14px;border-left:1px solid #0e1626;min-height:0}
+#panel h3{margin:0;font:600 13px ui-monospace,Menlo,monospace;color:#e8eef6}
+#panel .sub{color:#6f8399;white-space:pre-wrap;font-size:12px}
+#panel .plotbox{flex:1 1 0;min-height:0;display:flex;flex-direction:column}
+#panel canvas{flex:1 1 0;min-height:0;width:100%;background:#050912;border:1px solid #101828;border-radius:4px}
+#panel .lab{color:#6f8399;font-size:11px;margin:2px 0}
+#bottom{grid-column:1;grid-row:3;display:grid;grid-template-columns:1fr 1fr;gap:16px;padding:8px 16px;border-top:1px solid #0e1626;overflow:hidden}
+#ticker{white-space:pre;color:#6f8399;font-size:12px;overflow:hidden}#ticker .n{color:#ff5b5b}#ticker .k{color:#f2c14e}
+#stats{color:#6f8399;font-size:12px;white-space:pre-wrap;overflow:hidden}#stats b{color:#9fb3c8;font-weight:600}
+#tip{position:fixed;pointer-events:none;background:#0b1220;border:1px solid #223;padding:4px 7px;border-radius:4px;color:#e8eef6;display:none;white-space:pre;z-index:9}
 </style>
+<div id=wrap>
 <div id=hud><div><b>aerospace</b> · TESS sector scan · <span id=stat>…</span></div>
-<div class=legend><span><i style="background:#3a4a63"></i>rejected</span><span><i style="background:#f2c14e"></i>known planet</span><span><i style="background:#ff5b5b"></i>NEW</span></div></div>
-<canvas id=c></canvas><div id=ticker></div><div id=stats></div><div id=tip></div>
+<div class=legend><span><i style="background:#3a4a63"></i>rejected</span><span><i style="background:#f2c14e"></i>known planet</span><span><i style="background:#ff5b5b"></i>NEW</span><span><i style="background:#fff;opacity:.5"></i>bright star (naked eye)</span></div></div>
+<div id=map><canvas id=c></canvas><div id=hint>scroll = zoom · drag = pan · hover = numbers · click gold/red = pin evidence · double-click = reset</div></div>
 <div id=panel><h3 id=ptitle>looking at …</h3><div class=sub id=psub></div>
-<div class=lab>light curve (flattened), flux vs days</div><canvas id=p1></canvas>
-<div class=lab>periodogram: how box-like each trial period is (BLS power); the peak is the candidate</div><canvas id=p2></canvas>
-<div class=lab>folded on the candidate period; the dip in the middle is the transit</div><canvas id=p3></canvas></div>
+<div class=plotbox><div class=lab>light curve (flattened), flux vs days</div><canvas id=p1></canvas></div>
+<div class=plotbox><div class=lab>periodogram: BLS power per trial period; red line = the peak it picked</div><canvas id=p2></canvas></div>
+<div class=plotbox><div class=lab>folded on that period; a transit is one dip inside the shaded band</div><canvas id=p3></canvas></div></div>
+<div id=bottom><div id=ticker></div><div id=stats></div></div>
+</div><div id=tip></div>
 <script>
-const cv=document.getElementById('c'),cx=cv.getContext('2d');let rows=[],seen=new Set(),flash=[],first=true,pinned=null,geo={};
-const $=id=>document.getElementById(id);
-function plot(id,xs,ys,opts={}){const c=$(id),g=c.getContext('2d');const W=c.clientWidth,H=c.clientHeight;c.width=W*devicePixelRatio;c.height=H*devicePixelRatio;g.setTransform(devicePixelRatio,0,0,devicePixelRatio,0,0);
+const $=id=>document.getElementById(id);const cv=$('c'),cx=cv.getContext('2d');
+let rows=[],bright=[],seen=new Set(),flash=[],first=true,pinned=null,current=null,geo={},view={z:1,px:0,py:0},drag=null;
+const shift=r=>(r+60)%360;let bx0=1e9,bx1=-1e9,by0=1e9,by1=-1e9;
+function bounds(r){const x=shift(r.ra),y=r.dec;bx0=Math.min(bx0,x);bx1=Math.max(bx1,x);by0=Math.min(by0,y);by1=Math.max(by1,y)}
+function size(){const W=cv.clientWidth,H=cv.clientHeight;cv.width=W*devicePixelRatio;cv.height=H*devicePixelRatio;cx.setTransform(devicePixelRatio,0,0,devicePixelRatio,0,0)}
+addEventListener('resize',size);size();
+function base(){const W=cv.clientWidth-60,H=cv.clientHeight-60,s=Math.min(W/Math.max(bx1-bx0,1),H/Math.max(by1-by0,1));return{ox:30+(W-(bx1-bx0)*s)/2,oy:30+(H-(by1-by0)*s)/2,s}}
+function xy(ra,dec){const b=geo;return[b.ox+(shift(ra)-bx0)*b.s,b.oy+(by1-dec)*b.s]}
+function draw(){const W=cv.clientWidth,H=cv.clientHeight;cx.fillStyle='#02040a';cx.fillRect(0,0,W,H);
+ const b=base();geo={ox:(b.ox-W/2)*view.z+W/2+view.px,oy:(b.oy-H/2)*view.z+H/2+view.py,s:b.s*view.z};
+ // graticule: RA every 15° (1 hour), Dec every 10°
+ cx.strokeStyle='#0c1524';cx.fillStyle='#2a3a52';cx.lineWidth=1;cx.font='10px ui-monospace';
+ for(let ra=0;ra<360;ra+=15){const [x]=xy(ra,0);if(x<0||x>W)continue;cx.beginPath();cx.moveTo(x,0);cx.lineTo(x,H);cx.stroke();cx.fillText((ra/15)+'h',x+3,H-6)}
+ for(let dec=-90;dec<=0;dec+=10){const [,y]=xy(0,dec);if(y<0||y>H)continue;cx.beginPath();cx.moveTo(0,y);cx.lineTo(W,y);cx.stroke();cx.fillText(dec+'°',4,y-3)}
+ // real bright stars behind everything
+ for(const [ra,dec,m] of bright){const [x,y]=xy(ra,dec);if(x<-5||x>W+5||y<-5||y>H+5)continue;const r=Math.max(0.4,(6.8-m)*0.32)*Math.sqrt(view.z);cx.fillStyle='rgba(255,255,255,'+Math.min(.55,(7-m)*.09)+')';cx.beginPath();cx.arc(x,y,r,0,7);cx.fill()}
+ const z=Math.sqrt(view.z);
+ for(const r of rows){if(r.ra==null)continue;const [x,y]=xy(r.ra,r.dec);if(x<-5||x>W+5||y<-5||y>H+5)continue;
+  const m=Math.max(0.6,3.2-(r.tmag-6)*0.22)*z;cx.beginPath();cx.arc(x,y,r.label==='NEW'?m+2:m,0,7);
+  cx.fillStyle=r.label==='NEW'?'#ff5b5b':r.label==='KNOWN'?'#f2c14e':'#3a4a63';cx.fill();
+  if(r.label==='KNOWN'||r.label==='NEW'){cx.strokeStyle=cx.fillStyle;cx.globalAlpha=.35;cx.beginPath();cx.arc(x,y,m+6,0,7);cx.stroke();cx.globalAlpha=1}}
+ const now=Date.now();flash=flash.filter(f=>now-f.t<1500);
+ for(const f of flash){const [x,y]=xy(f.r.ra,f.r.dec),a=1-(now-f.t)/1500;cx.strokeStyle='rgba(180,220,255,'+a+')';cx.lineWidth=1.5;cx.beginPath();cx.arc(x,y,4+(1-a)*18,0,7);cx.stroke()}
+ if(current&&current.ra!=null){const [x,y]=xy(current.ra,current.dec);cx.strokeStyle='#7fb3ff';cx.lineWidth=1;cx.setLineDash([3,3]);
+  cx.beginPath();cx.moveTo(x-18,y);cx.lineTo(x-6,y);cx.moveTo(x+6,y);cx.lineTo(x+18,y);cx.moveTo(x,y-18);cx.lineTo(x,y-6);cx.moveTo(x,y+6);cx.lineTo(x,y+18);cx.stroke();cx.setLineDash([]);
+  cx.fillStyle='#7fb3ff';cx.font='11px ui-monospace';cx.fillText('looking at TIC'+current.tic,x+22,y+4)}
+ requestAnimationFrame(draw)}
+function plot(id,xs,ys,o={}){const c=$(id),g=c.getContext('2d');const W=c.clientWidth,H=c.clientHeight;if(!W||!H)return;c.width=W*devicePixelRatio;c.height=H*devicePixelRatio;g.setTransform(devicePixelRatio,0,0,devicePixelRatio,0,0);
  g.fillStyle='#050912';g.fillRect(0,0,W,H);const pts=xs.map((x,i)=>[x,ys[i]]).filter(p=>p[1]!=null&&isFinite(p[1]));if(!pts.length)return;
- let x0=Math.min(...xs),x1=Math.max(...xs),ys2=pts.map(p=>p[1]).sort((a,b)=>a-b),y0=ys2[Math.floor(ys2.length*.005)],y1=ys2[Math.floor(ys2.length*.995)];if(opts.ylo!=null)y0=opts.ylo;if(y1<=y0)y1=y0+1e-6;
+ let x0=Math.min(...xs),x1=Math.max(...xs),srt=pts.map(p=>p[1]).sort((a,b)=>a-b),y0=srt[Math.floor(srt.length*.005)],y1=srt[Math.floor(srt.length*.995)];if(y1<=y0)y1=y0+1e-6;
  const X=x=>8+(x-x0)/(x1-x0)*(W-16),Y=y=>H-8-(y-y0)/(y1-y0)*(H-16);
- if(opts.band){g.fillStyle='rgba(255,91,91,.12)';g.fillRect(X(-opts.band/2),0,X(opts.band/2)-X(-opts.band/2),H)}
- if(opts.log){}g.strokeStyle=opts.color||'#9fb3c8';g.fillStyle=opts.color||'#9fb3c8';
- if(opts.line){g.beginPath();pts.forEach((p,i)=>i?g.lineTo(X(p[0]),Y(p[1])):g.moveTo(X(p[0]),Y(p[1])));g.lineWidth=1;g.stroke()}
- else pts.forEach(p=>{g.fillRect(X(p[0]),Y(p[1]),1.2,1.2)});
- if(opts.mark!=null){g.strokeStyle='#ff5b5b';g.beginPath();g.moveTo(X(opts.mark),0);g.lineTo(X(opts.mark),H);g.stroke()}
- g.fillStyle='#4b5d75';g.font='10px ui-monospace';g.fillText(opts.xl||'',W-8-g.measureText(opts.xl||'').width,H-2);g.fillText((y0*(opts.scale||1)).toFixed(opts.dp||3),2,H-9);g.fillText((y1*(opts.scale||1)).toFixed(opts.dp||3),2,10)}
+ if(o.band){g.fillStyle='rgba(255,91,91,.12)';g.fillRect(X(-o.band/2),0,X(o.band/2)-X(-o.band/2),H)}
+ g.strokeStyle=g.fillStyle=o.color||'#9fb3c8';
+ if(o.line){g.beginPath();pts.forEach((p,i)=>i?g.lineTo(X(p[0]),Y(p[1])):g.moveTo(X(p[0]),Y(p[1])));g.lineWidth=1;g.stroke()}else pts.forEach(p=>g.fillRect(X(p[0]),Y(p[1]),1.2,1.2));
+ if(o.mark!=null){g.strokeStyle='#ff5b5b';g.beginPath();g.moveTo(X(o.mark),0);g.lineTo(X(o.mark),H);g.stroke()}
+ g.fillStyle='#4b5d75';g.font='10px ui-monospace';g.fillText(o.xl||'',W-8-g.measureText(o.xl||'').width,H-2);g.fillText(y0.toFixed(o.dp||3),2,H-9);g.fillText(y1.toFixed(o.dp||3),2,10)}
 function showStar(d,tag){if(!d||!d.lc)return;const r=d.row||{};$('ptitle').textContent=`${tag} TIC${d.tic} · sector ${d.sector} · ${r.label||''}`;
  $('psub').textContent=`P = ${(+r.period).toFixed(4)} d   depth ${r.depth} ppm   duration ${(r.duration*24).toFixed(1)} h   snr ${r.snr}   sde ${d.sde}   transits ${d.n_transits}\n${r.reasons||''}`;
- plot('p1',d.lc.t,d.lc.f,{xl:'days'});
- plot('p2',d.pgram.p.map(Math.log10),d.pgram.w,{line:true,mark:Math.log10(+r.period),xl:'log10 period (d)',dp:1,color:'#7fb3ff'});
+ plot('p1',d.lc.t,d.lc.f,{xl:'days'});plot('p2',d.pgram.p.map(Math.log10),d.pgram.w,{line:true,mark:Math.log10(+r.period),xl:'log10 period (d)',dp:1,color:'#7fb3ff'});
  plot('p3',d.fold.phase,d.fold.f,{line:true,band:d.fold.duration_phase,xl:'phase',color:'#f2c14e'})}
-cv.addEventListener('mousemove',e=>{const h=hit(e.clientX,e.clientY);const t=$('tip');if(!h){t.style.display='none';cv.style.cursor='default';return}
- cv.style.cursor='pointer';t.style.display='block';t.style.left=(e.clientX+14)+'px';t.style.top=(e.clientY+14)+'px';
- t.textContent=`TIC${h.tic}  ${h.label}\nP ${(+h.period||0).toFixed(3)} d  depth ${h.depth} ppm  snr ${h.snr}\nTmag ${(+h.tmag).toFixed(1)}  ra ${(+h.ra).toFixed(2)} dec ${(+h.dec).toFixed(2)}`});
-cv.addEventListener('click',async e=>{const h=hit(e.clientX,e.clientY);if(!h){pinned=null;return}if(h.label!=='KNOWN'&&h.label!=='NEW')return;
+function hit(mx,my){let best=null,bd=64;for(const r of rows){if(r.ra==null)continue;const [x,y]=xy(r.ra,r.dec);const d=(x-mx)**2+(y-my)**2;if(d<bd){bd=d;best=r}}return best}
+cv.addEventListener('mousemove',e=>{if(drag){view.px=drag.px+e.clientX-drag.x;view.py=drag.py+e.clientY-drag.y;return}
+ const h=hit(e.offsetX,e.offsetY),t=$('tip');if(!h){t.style.display='none';cv.style.cursor='grab';return}cv.style.cursor='pointer';t.style.display='block';t.style.left=(e.clientX+14)+'px';t.style.top=(e.clientY+14)+'px';
+ t.textContent=`TIC${h.tic}  ${h.label}\nP ${(+h.period||0).toFixed(3)} d  depth ${h.depth} ppm  snr ${h.snr}\nTmag ${(+h.tmag).toFixed(1)}  RA ${(h.ra/15).toFixed(2)}h  Dec ${(+h.dec).toFixed(2)}°`});
+cv.addEventListener('mousedown',e=>{drag={x:e.clientX,y:e.clientY,px:view.px,py:view.py,moved:false}});
+addEventListener('mouseup',async e=>{if(!drag)return;const moved=Math.abs(e.clientX-drag.x)+Math.abs(e.clientY-drag.y)>3;drag=null;if(moved)return;
+ const h=hit(e.clientX-cv.getBoundingClientRect().left,e.clientY-cv.getBoundingClientRect().top);if(!h){pinned=null;return}if(h.label!=='KNOWN'&&h.label!=='NEW')return;
  const d=await (await fetch('/star/'+h.tic)).json();if(d.lc){pinned=h.tic;showStar(d,'pinned ·')}});
-function hit(mx,my){let best=null,bd=64;for(const r of rows){if(r.ra==null)continue;const [x,y]=xy(r);const d=(x-mx)**2+(y-my)**2;if(d<bd){bd=d;best=r}}return best}
-function xy(r){return[geo.ox+(shift(r.ra)-bx0)*geo.s,geo.oy+(by1-r.dec)*geo.s]}
-function size(){cv.width=innerWidth*devicePixelRatio;cv.height=innerHeight*devicePixelRatio;cv.style.width=innerWidth+'px';cv.style.height=innerHeight+'px';cx.setTransform(devicePixelRatio,0,0,devicePixelRatio,0,0)}
-addEventListener('resize',size);size();
-// sky patch bounds: RA is shifted so the sector does not wrap at 0/360
-const shift=r=>(r+60)%360;let bx0=1e9,bx1=-1e9,by0=1e9,by1=-1e9;
-function place(r){if(r.ra==null)return null;const x=shift(r.ra),y=r.dec;bx0=Math.min(bx0,x);bx1=Math.max(bx1,x);by0=Math.min(by0,y);by1=Math.max(by1,y);return[x,y]}
-function draw(){cx.fillStyle='#02040a';cx.fillRect(0,0,innerWidth,innerHeight);
- const W=innerWidth*0.6-40,H=innerHeight-300,sx=W/Math.max(bx1-bx0,1),sy=H/Math.max(by1-by0,1),s=Math.min(sx,sy);
- const ox=24+(W-(bx1-bx0)*s)/2,oy=70+(H-(by1-by0)*s)/2;geo={ox,oy,s};
- for(const r of rows){if(r.ra==null)continue;const x=ox+(shift(r.ra)-bx0)*s,y=oy+(by1-r.dec)*s;
-  const m=Math.max(0.6,3.2-(r.tmag-6)*0.22);
-  cx.beginPath();cx.arc(x,y,r.label==='NEW'?m+2:m,0,7);
-  cx.fillStyle=r.label==='NEW'?'#ff5b5b':r.label==='KNOWN'?'#f2c14e':'#3a4a63';cx.fill();
-  if(r.label==='KNOWN'||r.label==='NEW'){cx.strokeStyle=cx.fillStyle;cx.globalAlpha=.35;cx.lineWidth=1;cx.beginPath();cx.arc(x,y,m+6,0,7);cx.stroke();cx.globalAlpha=1}}
- const now=Date.now();flash=flash.filter(f=>now-f.t<1500);
- for(const f of flash){const r=f.r,x=ox+(shift(r.ra)-bx0)*s,y=oy+(by1-r.dec)*s,a=1-(now-f.t)/1500;
-  cx.strokeStyle='rgba(180,220,255,'+a+')';cx.lineWidth=1.5;cx.beginPath();cx.arc(x,y,4+(1-a)*18,0,7);cx.stroke()}
- requestAnimationFrame(draw)}
+cv.addEventListener('wheel',e=>{e.preventDefault();const f=Math.exp(-e.deltaY*0.0015),W=cv.clientWidth,H=cv.clientHeight,mx=e.offsetX-W/2,my=e.offsetY-H/2;
+ const nz=Math.min(40,Math.max(0.5,view.z*f)),k=nz/view.z;view.px=mx-(mx-view.px)*k;view.py=my-(my-view.py)*k;view.z=nz},{passive:false});
+cv.addEventListener('dblclick',()=>{view={z:1,px:0,py:0}});
+fetch('/bright').then(r=>r.json()).then(b=>bright=b);
 async function poll(){try{const d=await (await fetch('/data')).json();
- if(!pinned){const c=await (await fetch('/current')).json();showStar(c,'looking at')}
- const st=await (await fetch('/stats')).json();$('stats').textContent='why stars get rejected:  '+st.why.map(([k,v])=>`${k} ×${v}`).join('  ·  ')+`\n${st.left} stars left in this sector · ${st.rate} per min · ETA ${st.eta_min?Math.floor(st.eta_min/60)+'h '+st.eta_min%60+'m':'…'}`;
  const fresh=d.rows.filter(r=>!seen.has(r.tic));for(const r of fresh){seen.add(r.tic);if(!first&&r.ra!=null)flash.push({r,t:Date.now()+Math.random()*2000})}first=false;
- rows=d.rows;for(const r of rows)place(r);
- document.getElementById('stat').innerHTML=`sector ${d.sector} · <b>${d.n}</b> / ${d.total} stars · rejected ${d.counts.REJECTED||0} · <span style="color:#f2c14e">known ${d.counts.KNOWN||0}</span> · <span style="color:#ff5b5b">NEW ${d.counts.NEW||0}</span> · ${d.rate} stars/min`;
- document.getElementById('ticker').innerHTML=d.last.map(r=>`<span class="${r.label==='NEW'?'n':r.label==='KNOWN'?'k':''}">TIC${String(r.tic).padEnd(12)} ${r.label.padEnd(9)} P=${(+r.period||0).toFixed(3).padStart(7)} d  depth ${String(r.depth||'').padStart(6)} ppm  snr ${String(r.snr||'').padStart(6)}  ${r.reasons||''}</span>`).join('\n');
- }catch(e){}setTimeout(poll,3000)}
+ rows=d.rows;for(const r of rows)bounds(r);
+ const c=await (await fetch('/current')).json();current=rows.find(r=>r.tic==c.tic)||null;if(!pinned)showStar(c,'looking at');
+ const st=await (await fetch('/stats')).json();
+ $('stat').innerHTML=`sector ${d.sector} · <b>${d.n}</b> / ${d.total} stars · rejected ${d.counts.REJECTED||0} · <span style="color:#f2c14e">known ${d.counts.KNOWN||0}</span> · <span style="color:#ff5b5b">NEW ${d.counts.NEW||0}</span> · ${d.rate} stars/min`;
+ $('stats').innerHTML='<b>why stars get rejected</b>\n'+st.why.map(([k,v])=>`${String(v).padStart(5)}  ${k}`).join('\n')+`\n<b>${st.left}</b> stars left · ${st.rate}/min · ETA ${st.eta_min?Math.floor(st.eta_min/60)+'h '+st.eta_min%60+'m':'…'}`;
+ $('ticker').innerHTML=d.last.map(r=>`<span class="${r.label==='NEW'?'n':r.label==='KNOWN'?'k':''}">TIC${String(r.tic).padEnd(11)} ${r.label.padEnd(9)} P=${(+r.period||0).toFixed(3).padStart(7)} d  ${String(r.depth||'').padStart(6)} ppm  snr ${String(r.snr||'').padStart(6)}</span>`).join('\n');
+ }catch(e){console.error(e)}setTimeout(poll,3000)}
 poll();draw();
 </script>"""
 
@@ -153,6 +171,9 @@ class H(BaseHTTPRequestHandler):
         self.wfile.write(body)
 
     def do_GET(self):
+        if self.path == "/bright":
+            f = DATA / "bright.csv"
+            return self._json([[float(r["ra"]), float(r["dec"]), float(r["tmag"])] for r in csv.DictReader(f.open())] if f.exists() else [])
         if self.path == "/current":
             f = DATA / "current.json"
             return self._json(json.loads(f.read_text()) if f.exists() else {})

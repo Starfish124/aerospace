@@ -219,3 +219,11 @@ TIC: Teff 3455 K, 0.55 R_sun, Tmag 13.1;  SIMBAD: UCAC4 260-197941 = NGTS J21435
 TESS EB catalog (Prsa 2022): MATCH   → REJECTED. vet.py now checks 4 lists: NASA confirmed, TOI, CTOI, TESS EBs.
 look killed (answer known). Recorded in data/looks.csv.
 ```
+
+### Sky page v3, 00:10
+```
+data/bright.csv: 10,145 naked-eye stars (TIC Tmag < 6.5, Dec -85..-15) fetched in 50 s → faint white background
+page: full-height map, scroll zoom / drag pan / double-click reset, RA (hours) × Dec (degrees) grid,
+      dashed crosshair on the star being examined, evidence panel fixed to the right column, rejection
+      reasons as a list. Layout bug on first try: panel landed in the left column (no grid-column set).
+```
