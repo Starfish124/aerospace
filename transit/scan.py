@@ -67,5 +67,5 @@ def scan(sector: int, limit: int | None = None, workers: int = 4) -> Path:
             for i, row in enumerate(ex.map(lambda tu: one(*tu, sector), todo), 1):
                 w.writerow(row); f.flush()
                 if i % 50 == 0 or row["label"] == "NEW":
-                    print(f"{i:6d}/{len(todo)}  TIC{row['tic']:<12} {row['label']:9s} {row.get('reasons','')[:70]}")
+                    print(f"{i:6d}/{len(todo)}  TIC{row['tic']:<12} {row['label']:9s} {row.get("reasons","")[:70]}", flush=True)
     return out
