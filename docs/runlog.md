@@ -175,3 +175,14 @@ backfill of the 6 flagged stars with the current vet:
   TIC234518605 REJECTED implied radius 26 R_earth → stellar companion (as predicted from 5.3 % depth)
 nightly job reloaded (PYTHONUNBUFFERED), resumed: "sector 1: 1605 done, 14284 to go"
 ```
+
+### The look at TIC 300013489 (the surviving NEW), 22:40
+```
+uv run aerospace look TIC300013489 --sector 1
+33 sectors (2018 → 2025)
+seed (sector 1):     P=5.2148 d  depth=3952 ppm  dur=1.9 h  snr=10.2  sde=9.8   n=6
+all sectors refined: P=5.2145 d  depth=3824 ppm  dur=1.9 h  snr=47.8  sde=11.9  n=135
+verdict:             NEW: snr 47.8; sde 11.9; odd/even agree (3%); secondary -1.4% (-0.7σ)
+recovered in 31/32 sectors (sector 32 found 6.198 d instead; sector 89 file missing)
+```
+Not in TOI list, not in the NASA confirmed table. Next: who is this star (SIMBAD, TIC params, EB catalog, CTOI)?
