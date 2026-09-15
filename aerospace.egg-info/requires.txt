@@ -1,0 +1,3 @@
+lightkurve>=2.6.0
+pandas>=2.3.3
+pytest>=9.1.1

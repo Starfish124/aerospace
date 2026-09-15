@@ -8,3 +8,12 @@ dependencies = [
     "pandas>=2.3.3",
     "pytest>=9.1.1",
 ]
+
+[project.scripts]
+aerospace = "transit.cli:main"
+
+[tool.uv]
+package = true
+
+[tool.setuptools]
+packages = ["transit", "rocket"]
