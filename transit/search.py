@@ -52,3 +52,19 @@ def search_full(lc, top=3):
         if len(out) == top:
             break
     return out, flat, res.period, res.power
+
+
+def refine(lc, period, t0, width=0.01, n=3000) -> Candidate:
+    """Re-measure a known candidate on a long (multi-sector) light curve using a narrow period window.
+    A full search on years of data needs millions of trial periods (grid ∝ baseline²) and eats memory;
+    a window of ±width around the period needs a few thousand."""
+    flat = lc.flatten(window_length=FLATTEN_WINDOW).remove_outliers(sigma_upper=4, sigma_lower=20)
+    t, f = flat.time.value, flat.flux.value
+    bls = BoxLeastSquares(t, f, dy=flat.flux_err.value)
+    periods = np.linspace(period * (1 - width), period * (1 + width), n)
+    res = bls.power(periods, DURATIONS, objective="snr")
+    i = int(np.argmax(res.power))
+    stats = bls.compute_stats(res.period[i], res.duration[i], res.transit_time[i])
+    sde = float((res.power[i] - np.mean(res.power)) / np.std(res.power))
+    return Candidate(float(res.period[i]), float(res.transit_time[i]), float(res.duration[i]), float(res.depth[i]),
+                     float(stats["depth"][0] / stats["depth"][1]), sde, int(np.sum(stats["per_transit_count"] > 0)), stats)

@@ -62,7 +62,7 @@ def cmd_ascent(a):
 
 def cmd_look(a):
     from transit.look import look
-    look(a.target)
+    look(a.target, a.sector)
 
 
 def main():
@@ -93,6 +93,7 @@ def main():
     s.set_defaults(fn=cmd_ascent)
     s = sub.add_parser("look", help="manual look: fold on the candidate period, check every sector, save PNG")
     s.add_argument("target")
+    s.add_argument("--sector", type=int, default=None, help="sector the candidate was found in")
     s.set_defaults(fn=cmd_look)
     a = p.parse_args()
     a.fn(a)
