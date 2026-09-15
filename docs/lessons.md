@@ -72,3 +72,15 @@ One entry per milestone. What we did, why, and what surprised us. Read this when
 - Three "look at every sector" jobs ran at once and the machine killed all three for memory. The BLS period grid gets denser with the square of the time span: one sector is 27 days, thirty-three sectors is three years, so the grid grew by a factor of ~10,000. Fix: on long baselines only refine in a ±1 % window around the period one sector already found. Same physics, a thousandth of the memory.
 - The pipeline's own throughput was being halved by those looks. When they died the scan doubled its rate. Contention is invisible until you measure the rate.
 - Port 7420 was already taken by another project's server; the sky page silently answered 404s from a stranger. Always `lsof` a port before trusting a 200 or a 404 from it.
+
+## The first "NEW" candidate, and the third catalog (2026-09-15, 23:00)
+
+**What happened.** TIC 300013489 passed every check: same 5.2145-day period in 31 of 32 sectors over seven years, 135 transits, SNR 48, flat odd/even, no secondary. Not in the TOI list, not in the NASA confirmed table. For twenty minutes it was a discovery.
+
+**What it was.** A Community TOI: CTOI 300013489.01, a planet candidate a citizen scientist submitted to ExoFOP in December 2022. There are three lists, not two: confirmed planets (NASA), TESS's own candidates (TOI), and candidates anyone can submit (CTOI). We checked two.
+
+**What it still means.** The pipeline found, on its own and blind, a real planet candidate that took a human years to flag. That is the proof the method works. It also shows the honest size of the opportunity: sector 1 has had eight years of eyes on it. Anything "new" there must clear three catalogs, and even then the first suspicion should be a fourth list we have not heard of.
+
+**The habit to keep.** Before calling anything new, go looking for the reason it is not. The moment of "wait, why has nobody seen this" is a prompt to search harder, not to celebrate.
+
+**Scoreboard after 3,025 stars.** 12 known planets or candidates rediscovered blind (TOI 122, 134, 138, 141 and eight more, sizes from 1.5 to 16 Earth radii), 1 stellar companion rejected by its implied 26 Earth-radius size, 1 NEW left under the look (TIC 308452910, a 0.53-day signal around a small red star).

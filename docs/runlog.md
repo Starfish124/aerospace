@@ -186,3 +186,17 @@ verdict:             NEW: snr 47.8; sde 11.9; odd/even agree (3%); secondary -1.
 recovered in 31/32 sectors (sector 32 found 6.198 d instead; sector 89 file missing)
 ```
 Not in TOI list, not in the NASA confirmed table. Next: who is this star (SIMBAD, TIC params, EB catalog, CTOI)?
+
+### Who is TIC 300013489? 22:50
+```
+TIC: Tmag 13.28, no Teff/logg/radius in the catalog, Gaia 5280724176618264192
+SIMBAD: nothing within 10 arcsec        TESS EB catalog (Prsa 2022): no match
+ExoFOP community TOIs: 300013489.01  disposition PC  P=5.22 d  submitted 2022-12-09
+→ KNOWN (community TOI). vet.py now checks three catalogs: NASA confirmed, TOI, CTOI.
+re-vet of all NEW/ERROR rows with the full vet (scan stopped for the rewrite, then resumed):
+  TIC381854774  NEW → KNOWN   ~15.9 R_earth, community TOI
+  TIC229808144  NEW → KNOWN   5.3 % deep, community TOI
+  TIC308452910  NEW → NEW     P=0.5315 d  2309 ppm  snr 17  sde 8.2  ~2.3 R_earth (star 0.44 R_sun)  → look running
+  3 ERROR → REJECTED on retry (they were MAST connection drops)
+after 3,025 stars: 12 KNOWN, 1 NEW, 0 ERROR
+```

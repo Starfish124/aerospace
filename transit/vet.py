@@ -14,6 +14,8 @@ TOI_CSV = DATA / "toi.csv"
 CONFIRMED_URL = ("https://exoplanetarchive.ipac.caltech.edu/TAP/sync?query="
                  "select+pl_name,tic_id,pl_orbper+from+ps+where+default_flag=1&format=csv")
 CONFIRMED_CSV = DATA / "confirmed.csv"
+CTOI_URL = "https://exofop.ipac.caltech.edu/tess/download_ctoi.php?output=csv"
+CTOI_CSV = DATA / "ctoi.csv"
 SNR_FLOOR = 7.0
 SDE_FLOOR = 8.0      # calibrated 2026-09-15: WASP-18 b 9.3, Pi Men c 10.0; 14 false positives all < 7.2
 MIN_TRANSITS = 3     # one or two dips is a glitch or a single event, not a period
@@ -42,6 +44,14 @@ def toi_table() -> pd.DataFrame:
     if not TOI_CSV.exists() or time.time() - TOI_CSV.stat().st_mtime > 86400:
         urllib.request.urlretrieve(TOI_URL, TOI_CSV)
     return pd.read_csv(TOI_CSV, usecols=["TIC ID", "TOI", "Period (days)", "TFOPWG Disposition"])
+
+
+@lru_cache(maxsize=1)
+def ctoi_table() -> pd.DataFrame:
+    """Community TOIs (candidates submitted by anyone to ExoFOP), refreshed when older than a day."""
+    if not CTOI_CSV.exists() or time.time() - CTOI_CSV.stat().st_mtime > 86400:
+        urllib.request.urlretrieve(CTOI_URL, CTOI_CSV)
+    return pd.read_csv(CTOI_CSV, usecols=["TIC ID", "CTOI", "Period (days)", "TFOPWG Disposition"])
 
 
 @lru_cache(maxsize=1)
@@ -126,6 +136,10 @@ def vet(target: str, c: Candidate) -> Verdict:
     for _, r in rows.iterrows():
         if _period_match(c.period, r["Period (days)"]):
             reasons.append(f"matches TOI {r['TOI']} (P={r['Period (days)']:.4f}, {r['TFOPWG Disposition']})")
+            return Verdict(True, "KNOWN", reasons)
+    for _, r in ctoi_table().query("`TIC ID` == @tic").iterrows():
+        if _period_match(c.period, r["Period (days)"]):
+            reasons.append(f"matches community TOI {r['CTOI']} (P={r['Period (days)']:.4f}, {r['TFOPWG Disposition']})")
             return Verdict(True, "KNOWN", reasons)
     if len(rows):
         reasons.append(f"TIC has TOI(s) {', '.join(map(str, rows['TOI']))} at other periods")
