@@ -18,6 +18,7 @@ SNR_FLOOR = 7.0
 SDE_FLOOR = 8.0      # calibrated 2026-09-15: WASP-18 b 9.3, Pi Men c 10.0; 14 false positives all < 7.2
 MIN_TRANSITS = 3     # one or two dips is a glitch or a single event, not a period
 SIGMA = 3.0
+MAX_RADIUS_EARTH = 22.0  # ~2 Jupiter radii; bigger than that and the "planet" is a star
 # Relative thresholds matter more than sigma: at SNR 600 a 10 % odd/even wobble is 40σ but still a planet.
 # Eclipsing binaries show odd/even off by ~2x and secondaries of tens of percent.
 ODD_EVEN_REL = 0.25   # ponytail: WASP-18 b measures 11 %; tighten once flatten masks transits
@@ -51,6 +52,22 @@ def confirmed_table() -> pd.DataFrame:
     df = pd.read_csv(CONFIRMED_CSV).dropna(subset=["tic_id"])
     df["tic"] = df["tic_id"].str.replace("TIC", "").str.strip().astype(int)
     return df
+
+
+@lru_cache(maxsize=4096)
+def star_radius(tic: int) -> float | None:
+    """Stellar radius in solar radii from the TIC catalog, None if unknown."""
+    from astroquery.mast import Catalogs
+    try:
+        t = Catalogs.query_criteria(catalog="TIC", ID=tic)
+        r = float(t["rad"][0])
+        return None if r != r else r  # NaN check
+    except Exception:
+        return None
+
+
+def implied_radius_earth(depth: float, r_star: float) -> float:
+    return depth ** 0.5 * r_star * 109.1  # R_sun -> R_earth
 
 
 def _period_match(p, q):
@@ -94,6 +111,13 @@ def vet(target: str, c: Candidate) -> Verdict:
         return Verdict(False, "REJECTED", reasons)
 
     tic = int(target.upper().replace("TIC", "").strip())
+    r_star = star_radius(tic)
+    if r_star:
+        r_p = implied_radius_earth(c.depth, r_star)
+        if r_p > MAX_RADIUS_EARTH:
+            reasons.append(f"implied radius {r_p:.0f} R_earth (star {r_star:.2f} R_sun): stellar companion")
+            return Verdict(False, "REJECTED", reasons)
+        reasons.append(f"~{r_p:.1f} R_earth (star {r_star:.2f} R_sun)")
     for _, r in confirmed_table().query("tic == @tic").iterrows():  # same period or a harmonic
         if _period_match(c.period, r["pl_orbper"]):
             reasons.append(f"confirmed planet {r['pl_name']} (P={r['pl_orbper']:.4f})")

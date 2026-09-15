@@ -29,3 +29,10 @@ def test_weak_peak_and_few_transits_rejected():
     assert vet("TIC1", Candidate(1.0, 0.0, 0.1, 1e-3, 20.0, 10.0, 2, st)).label == "REJECTED"  # 2 transits
     st["harmonic_delta_log_likelihood"] = 5
     assert vet("TIC1", Candidate(1.0, 0.0, 0.1, 1e-3, 20.0, 10.0, 5, st)).label == "REJECTED"  # sine wins
+
+
+def test_implied_radius():
+    from transit.vet import implied_radius_earth
+    assert 1.5 < implied_radius_earth(226e-6, 1.10) < 2.5      # Pi Men c is ~2 R_earth
+    assert 11 < implied_radius_earth(9474e-6, 1.23) < 15       # WASP-18 b is ~1.2 R_jup
+    assert implied_radius_earth(0.053, 1.0) > 22                # 5 % deep on a Sun = a star
