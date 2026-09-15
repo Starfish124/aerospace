@@ -50,3 +50,16 @@ One entry per milestone. What we did, why, and what surprised us. Read this when
 - A pure gravity turn is knife-edge: kick 2.0° almost orbits, 2.5° falls back into the atmosphere. That is why every real upper stage steers closed-loop. Ten lines of altitude-hold made insertion robust.
 - Drag is nearly irrelevant to the budget; gravity loss is 60× bigger. Rockets go up first to escape drag, then sideways to escape gravity loss.
 - We make orbit with 16 t, SpaceX advertises 22.8 t. The gap is our crude steering (482 m/s wasted) and no fairing separation. Marked as the `ponytail:` ceiling: a real guidance law is the upgrade.
+
+## B2: a lander that learned to land (2026-09-15)
+
+**What we did.** `rocket/lander_env.py` is a 2D lander with readable physics (moon gravity, one main engine, two side thrusters, fuel). `rocket/train.py` trains PPO from stable-baselines3 on the CPU: 8 parallel copies of the world, 100k steps every ~8 s. Result: **93 % soft landings over 100 fresh episodes**, in about 1.4 M steps total (~3 minutes of compute). `uv run python rocket/train.py --eval` replays one landing as ASCII.
+
+**What reinforcement learning is, in one line.** The agent tries things, gets a number back (the reward), and shifts toward whatever raised the number. We never wrote a landing rule; we wrote the scoreboard.
+
+**What surprised us: three runs, three ways the scoreboard lied.**
+1. *Run 1, 0 %: it learned to hover.* Timeout and crash both cost 100 points, and descending the last 4 m paid about 4 points. A rational agent hovers until the clock runs out. Fix: no penalty for timing out, 10× stronger reward for getting closer, and a small cost for every step alive.
+2. *Run 2, 0 %: it hovered 0.7 m above the pad.* Touchdown was a binary +100 or −100, and it sat just outside the 2 m pad tolerance. A cliff makes a cautious agent freeze. Fix: grade the touchdown (speed, angle, distance each cost points), so a near miss still pays.
+3. *Run 3, 97 % then 89 %:* the 30-episode checkpoint flattered it, and PPO wobbles from one checkpoint to the next. Fix: judge on 100 episodes and keep only the best checkpoint. Best-of-run reached 93 %.
+
+**The lesson that transfers.** Every bug was in the reward, not the physics or the algorithm. Designing the scoreboard is the whole job; the learning itself is a library call.

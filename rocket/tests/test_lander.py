@@ -12,11 +12,10 @@ def test_hover_policy_survives_and_burns_fuel():
 
 def test_free_fall_crashes_with_penalty():
     p = Physics(); p.reset(np.random.default_rng(0))
-    total, done = 0.0, False
+    done = False
     while not done:
         _, r, done, info = p.step(0)
-        total += r
-    assert info["landed"] is False and total < -50
+    assert info["landed"] is False and r < -50  # the final step carries the crash penalty
 
 
 def test_gym_env_contract():

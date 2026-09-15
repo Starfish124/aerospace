@@ -41,7 +41,8 @@ class Physics:
 
     def _shaping(self):
         # closer, slower, more upright = better. Same idea as the classic LunarLander shaping.
-        return -(np.hypot(self.x, self.y) + np.hypot(self.vx, self.vy) + 3 * abs(self.angle))
+        # Scale matters: at 1x the agent learned to hover forever (descending risked -100 for ~4 points).
+        return -10 * (np.hypot(self.x, self.y) + np.hypot(self.vx, self.vy) + 3 * abs(self.angle))
 
     def step(self, a):
         ax, ay, aw = 0.0, -G, 0.0
@@ -57,18 +58,23 @@ class Physics:
         self.steps += 1
 
         shaping = self._shaping()
-        reward = shaping - self.prev_shaping - (0.03 if a == 1 else 0.003 if a else 0)
+        reward = shaping - self.prev_shaping - (0.3 if a == 1 else 0.03 if a else 0) - 0.1  # -0.1/step: hovering is not free
         self.prev_shaping = shaping
         terminated, info = False, {}
         if self.y <= 0:
             terminated = True
-            soft = np.hypot(self.vx, self.vy) < SOFT_V and abs(self.angle) < SOFT_ANGLE and abs(self.x) < 2.0
+            v = np.hypot(self.vx, self.vy)
+            soft = v < SOFT_V and abs(self.angle) < SOFT_ANGLE and abs(self.x) < 2.0
             info["landed"] = bool(soft)
-            reward += 100 if soft else -100
-        elif abs(self.x) > WORLD_W / 2 or self.y > WORLD_H or self.steps >= MAX_STEPS:
+            # Graded, not binary: a binary +-100 is a cliff and the agent learned to hover above it forever.
+            reward += 100 if soft else float(np.clip(100 - 40 * v - 100 * abs(self.angle) - 15 * abs(self.x), -100, 100))
+        elif abs(self.x) > WORLD_W / 2 or self.y > WORLD_H:
             terminated = True
             info["landed"] = False
             reward -= 100
+        elif self.steps >= MAX_STEPS:  # ran out of time: no crash penalty, or hovering looks as good as trying
+            terminated = True
+            info["landed"] = False
         return self.obs(), float(reward), terminated, info
 
 
@@ -95,8 +101,8 @@ if gym is not None:
             row = int(np.clip((WORLD_H - p.y) / WORLD_H * 10, 0, 9))
             col = int(np.clip((p.x + WORLD_W / 2) / WORLD_W * 40, 0, 39))
             lines = [[" "] * 40 for _ in range(10)]
-            lines[row][col] = "^" if abs(p.angle) < 0.3 else "/" if p.angle > 0 else "\\"
             lines[9][18:22] = list("====")
+            lines[row][col] = "^" if abs(p.angle) < 0.3 else "/" if p.angle > 0 else "\\"
             return "\n".join("".join(l) for l in lines)
 
 

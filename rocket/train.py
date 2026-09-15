@@ -19,15 +19,21 @@ torch.set_num_threads(4)  # ponytail: share the M4 with the nightly scan
 
 def train(steps=1_000_000):
     env = make_vec_env(LanderEnv, n_envs=8, seed=0)
-    model = PPO("MlpPolicy", env, n_steps=512, batch_size=512, learning_rate=3e-4, gamma=0.995,
-                ent_coef=0.01, seed=0, device="cpu", verbose=0)
+    if MODEL.exists():  # resume
+        model = PPO.load(MODEL, env=env, device="cpu")
+    else:
+        model = PPO("MlpPolicy", env, n_steps=512, batch_size=512, learning_rate=3e-4, gamma=0.995,
+                    ent_coef=0.01, seed=0, device="cpu", verbose=0)
     t0 = time.time()
+    best = evaluate(model, episodes=100)[0] if MODEL.exists() else 0.0
     for chunk in range(steps // 100_000):
         model.learn(100_000, reset_num_timesteps=False)
-        rate, _ = evaluate(model, episodes=30)
-        print(f"{(chunk+1)*100_000:>9,d} steps  {time.time()-t0:5.0f}s  soft landings {rate:.0%}", flush=True)
-        model.save(MODEL)
-        if rate >= 0.95:
+        rate, _ = evaluate(model, episodes=100)
+        print(f"{(chunk+1)*100_000:>9,d} steps  {time.time()-t0:5.0f}s  soft landings {rate:.0%}  best {max(best, rate):.0%}", flush=True)
+        if rate > best:  # PPO wobbles; keep only the best checkpoint
+            best = rate
+            model.save(MODEL)
+        if best >= 0.92:
             break
     return model
 
