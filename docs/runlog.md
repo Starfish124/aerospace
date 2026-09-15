@@ -160,3 +160,18 @@ screenshot: the sector-1 footprint is a curved strip of southern sky; 4 gold = k
   (TOI 122.01, 134.01, 138.01, 141.01 rediscovered blind), 2 red = NEW under investigation
 scan rate while 3 looks + sky page compete for the CPU: 19–23 stars/min (32 alone)
 ```
+
+### Sky page v2: the evidence panel, 22:00
+```
+scan.py now writes data/current.json for every star (flattened light curve 800 pts, BLS periodogram 500 pts,
+  fold 200 bins) and keeps data/stars/<tic>.json for KNOWN/NEW. sky.py serves /current /star/<tic> /stats.
+GET /current → 33.7 KB   GET /star/261136679 → KNOWN
+backfill of the 6 flagged stars with the current vet:
+  TIC231702397 KNOWN   ~2.7 R_earth (star 0.33 R_sun)      TOI 122.01
+  TIC234994474 KNOWN   ~1.5 R_earth (star 0.60 R_sun)      TOI 134.01
+  TIC277683130 KNOWN   ~5.3 R_earth (star 1.11 R_sun)      TOI 138.01
+  TIC403224672 KNOWN   ~1.8 R_earth (star 1.13 R_sun)      TOI 141.01
+  TIC300013489 NEW     snr 10.2 sde 9.8, 3952 ppm, no stellar radius in TIC → 33-sector look pending
+  TIC234518605 REJECTED implied radius 26 R_earth → stellar companion (as predicted from 5.3 % depth)
+nightly job reloaded (PYTHONUNBUFFERED), resumed: "sector 1: 1605 done, 14284 to go"
+```

@@ -26,6 +26,11 @@ class Candidate:
 
 def search(lc, top=3) -> list[Candidate]:
     """Return the `top` strongest distinct periodic dips, strongest first."""
+    return search_full(lc, top)[0]
+
+
+def search_full(lc, top=3):
+    """search() plus what it saw: (candidates, flattened light curve, periods, power)."""
     flat = lc.flatten(window_length=FLATTEN_WINDOW).remove_outliers(sigma_upper=4, sigma_lower=20)
     t, f = flat.time.value, flat.flux.value
     span = t.max() - t.min()
@@ -46,4 +51,4 @@ def search(lc, top=3) -> list[Candidate]:
                              float(sde_all[i]), int(np.sum(stats["per_transit_count"] > 0)), stats))
         if len(out) == top:
             break
-    return out
+    return out, flat, res.period, res.power
