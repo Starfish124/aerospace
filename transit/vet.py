@@ -107,6 +107,21 @@ def in_tess_eb_catalog(ra: float, dec: float) -> bool:
 
 
 @lru_cache(maxsize=4096)
+def simbad_identity(ra: float, dec: float) -> str | None:
+    """'main id (object type)' from SIMBAD within 5 arcsec, None if unknown. Object types that matter here:
+    EB* eclipsing binary, HS* hot subdwarf, WD* white dwarf, RotV* rotating variable, Pl planet host."""
+    try:
+        from astroquery.simbad import Simbad
+        from astropy.coordinates import SkyCoord
+        import astropy.units as u
+        sb = Simbad(); sb.add_votable_fields("otype")
+        r = sb.query_region(SkyCoord(ra, dec, unit="deg"), radius=5 * u.arcsec)
+        return f"{r['main_id'][0]} ({r['otype'][0]})" if r is not None and len(r) else None
+    except Exception:
+        return None
+
+
+@lru_cache(maxsize=4096)
 def star_position(tic: int):
     from astroquery.mast import Catalogs
     try:
@@ -191,4 +206,7 @@ def vet(target: str, c: Candidate) -> Verdict:
         return Verdict(False, "REJECTED", reasons)
     if var:
         reasons.append(f"Gaia DR3 variability class {var}")
+    ident = simbad_identity(*pos) if pos else None
+    if ident:
+        reasons.append(f"SIMBAD: {ident}")
     return Verdict(True, "NEW", reasons)
