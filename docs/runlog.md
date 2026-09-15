@@ -212,3 +212,10 @@ Gaia DR3 variability: SOLAR_LIKE (rotational modulation)   TESS EB catalog: no m
 → REJECTED: brightening at phase 0.5. New vet rule; recorded in data/looks.csv (overrides scan label)
 sky counts after: REJECTED 3314, KNOWN 13, NEW 1 (TIC 197570458, look running)
 ```
+
+### TIC 197570458: an eclipsing binary, 23:40
+```
+TIC: Teff 3455 K, 0.55 R_sun, Tmag 13.1;  SIMBAD: UCAC4 260-197941 = NGTS J214358.5-380102
+TESS EB catalog (Prsa 2022): MATCH   → REJECTED. vet.py now checks 4 lists: NASA confirmed, TOI, CTOI, TESS EBs.
+look killed (answer known). Recorded in data/looks.csv.
+```

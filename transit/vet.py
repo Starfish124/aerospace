@@ -94,6 +94,19 @@ def gaia_variability(ra: float, dec: float) -> str | None:
 
 
 @lru_cache(maxsize=4096)
+def in_tess_eb_catalog(ra: float, dec: float) -> bool:
+    """Prsa et al. 2022 TESS eclipsing-binary catalog (Vizier J/ApJS/258/16), within 3 arcsec."""
+    try:
+        from astroquery.vizier import Vizier
+        from astropy.coordinates import SkyCoord
+        import astropy.units as u
+        q = Vizier(row_limit=1).query_region(SkyCoord(ra, dec, unit="deg"), radius=3 * u.arcsec, catalog="J/ApJS/258/16")
+        return bool(q)
+    except Exception:
+        return False
+
+
+@lru_cache(maxsize=4096)
 def star_position(tic: int):
     from astroquery.mast import Catalogs
     try:
@@ -169,6 +182,9 @@ def vet(target: str, c: Candidate) -> Verdict:
     if len(rows):
         reasons.append(f"TIC has TOI(s) {', '.join(map(str, rows['TOI']))} at other periods")
     pos = star_position(tic)
+    if pos and in_tess_eb_catalog(*pos):
+        reasons.append("in the TESS eclipsing-binary catalog (Prsa 2022)")
+        return Verdict(False, "REJECTED", reasons)
     var = gaia_variability(*pos) if pos else None
     if var == "ECL":
         reasons.append("Gaia DR3 class ECL: eclipsing binary")
