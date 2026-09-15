@@ -7,6 +7,12 @@ aerospace.egg-info/entry_points.txt
 aerospace.egg-info/requires.txt
 aerospace.egg-info/top_level.txt
 rocket/__init__.py
+rocket/ascent.py
+rocket/lander_env.py
 transit/__init__.py
 transit/cli.py
 transit/fetch.py
+transit/report.py
+transit/scan.py
+transit/search.py
+transit/vet.py
