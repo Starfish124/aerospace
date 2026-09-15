@@ -1,0 +1,6 @@
+aerospace transit report 2026-09-15
+
+sector 1: 40/15889 scanned  REJECTED 40
+
+NEW candidates (0), strongest first:
+  none

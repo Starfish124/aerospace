@@ -38,6 +38,16 @@ def cmd_scan(a):
     print("wrote", scan(a.sector, a.limit, a.workers))
 
 
+def cmd_report(a):
+    from transit.report import report
+    print(report())
+
+
+def cmd_nightly(a):
+    from transit.report import nightly
+    nightly()
+
+
 def main():
     p = argparse.ArgumentParser(prog="aerospace")
     sub = p.add_subparsers(dest="cmd", required=True)
@@ -58,5 +68,7 @@ def main():
     s.add_argument("--limit", type=int, default=None)
     s.add_argument("--workers", type=int, default=4)
     s.set_defaults(fn=cmd_scan)
+    sub.add_parser("report", help="summarise all scans into reports/<date>.txt").set_defaults(fn=cmd_report)
+    sub.add_parser("nightly", help="scan the next sector, write and commit the report").set_defaults(fn=cmd_nightly)
     a = p.parse_args()
     a.fn(a)
