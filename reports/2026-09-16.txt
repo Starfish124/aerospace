@@ -1,0 +1,7 @@
+aerospace transit report 2026-09-16
+
+sector 1: 15889/15889 scanned  ERROR 8  KNOWN 47  NEW 2  REJECTED 15832
+
+NEW candidates (2), strongest first:
+  TIC260304277    s1  P=0.5127 d  depth=195 ppm  snr=20.8  snr 20.8; sde 8.2; odd/even agree (10%); secondary 3.3% (0.7σ); ~3.0 R_earth (star 1.98 R_sun); SIMBAD: HD  44446 (*)
+  TIC269857486    s1  P=0.6349 d  depth=1393 ppm  snr=8.4  snr 8.4; sde 8.3; odd/even agree (33%); secondary -8.8% (-0.7σ)
