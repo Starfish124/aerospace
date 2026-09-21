@@ -1,0 +1,12 @@
+aerospace transit report 2026-09-22
+
+sector 1: 15889/15889 scanned  ERROR 8  KNOWN 47  REJECTED 15834
+sector 2: 0/0 scanned  
+sector 3: 0/0 scanned  
+sector 4: 0/0 scanned  
+sector 5: 0/0 scanned  
+sector 6: 0/0 scanned  
+sector 7: 0/0 scanned  
+
+NEW candidates (0), strongest first:
+  none
