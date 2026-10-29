@@ -37,28 +37,37 @@ class Verdict:
         return f"{self.label}: " + "; ".join(self.reasons)
 
 
+def _refresh(url: str, path) -> None:
+    """Re-download a catalog older than a day. If the server is down, yesterday's copy is good enough."""
+    if path.exists() and time.time() - path.stat().st_mtime < 86400:
+        return
+    try:
+        urllib.request.urlretrieve(url, path.with_suffix(".part"))  # a half download never replaces a good copy
+        path.with_suffix(".part").replace(path)
+    except Exception:
+        if not path.exists():
+            raise
+
+
 @lru_cache(maxsize=1)
 def toi_table() -> pd.DataFrame:
     """TOI catalog, refreshed when older than a day."""
     DATA.mkdir(exist_ok=True)
-    if not TOI_CSV.exists() or time.time() - TOI_CSV.stat().st_mtime > 86400:
-        urllib.request.urlretrieve(TOI_URL, TOI_CSV)
+    _refresh(TOI_URL, TOI_CSV)
     return pd.read_csv(TOI_CSV, usecols=["TIC ID", "TOI", "Period (days)", "TFOPWG Disposition"])
 
 
 @lru_cache(maxsize=1)
 def ctoi_table() -> pd.DataFrame:
     """Community TOIs (candidates submitted by anyone to ExoFOP), refreshed when older than a day."""
-    if not CTOI_CSV.exists() or time.time() - CTOI_CSV.stat().st_mtime > 86400:
-        urllib.request.urlretrieve(CTOI_URL, CTOI_CSV)
+    _refresh(CTOI_URL, CTOI_CSV)
     return pd.read_csv(CTOI_CSV, usecols=["TIC ID", "CTOI", "Period (days)", "TFOPWG Disposition"])
 
 
 @lru_cache(maxsize=1)
 def confirmed_table() -> pd.DataFrame:
     """NASA Exoplanet Archive confirmed planets with a TIC id, refreshed when older than a day."""
-    if not CONFIRMED_CSV.exists() or time.time() - CONFIRMED_CSV.stat().st_mtime > 86400:
-        urllib.request.urlretrieve(CONFIRMED_URL, CONFIRMED_CSV)
+    _refresh(CONFIRMED_URL, CONFIRMED_CSV)
     df = pd.read_csv(CONFIRMED_CSV).dropna(subset=["tic_id"])
     df["tic"] = df["tic_id"].str.replace("TIC", "").str.strip().astype(int)
     return df

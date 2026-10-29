@@ -27,7 +27,7 @@ def targets(sector: int) -> list[tuple[str, str]]:
         urllib.request.urlretrieve(SCRIPT_URL.format(sector), script)
     out = []
     for line in script.read_text().splitlines():
-        m = re.search(r"-0*(\d+)-0120-s_lc\.fits (https://\S+)", line)
+        m = re.search(r"-0*(\d+)-\d{4}-s_lc\.fits (https://\S+)", line)
         if m:
             out.append((m.group(1), m.group(2)))
     return out
@@ -95,7 +95,7 @@ def scan(sector: int, limit: int | None = None, workers: int = 4) -> Path:
     print(f"sector {sector}: {len(done)} done, {len(todo)} to go")
     with out.open("a", newline="") as f:
         w = csv.DictWriter(f, fieldnames=FIELDS)
-        if not done:
+        if f.tell() == 0:
             w.writeheader()
         # ponytail: threads, not processes; BLS is C and mostly releases the GIL, downloads dominate anyway
         with ThreadPoolExecutor(workers) as ex:
