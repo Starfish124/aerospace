@@ -1,0 +1,55 @@
+aerospace transit report 2026-11-03
+
+sector 1: 15889/15889 scanned  ERROR 8  KNOWN 47  REJECTED 15834
+sector 10: 0/19999 scanned  
+sector 11: 0/19990 scanned  
+sector 12: 0/19989 scanned  
+sector 13: 0/19997 scanned  
+sector 14: 0/19970 scanned  
+sector 15: 0/19973 scanned  
+sector 16: 0/19973 scanned  
+sector 17: 0/19965 scanned  
+sector 18: 0/19970 scanned  
+sector 19: 0/19975 scanned  
+sector 2: 15994/15994 scanned  ERROR 5  KNOWN 51  NEW 9  REJECTED 15929
+sector 20: 0/19967 scanned  
+sector 21: 0/19960 scanned  
+sector 22: 0/19959 scanned  
+sector 23: 0/19958 scanned  
+sector 24: 0/19997 scanned  
+sector 25: 0/19996 scanned  
+sector 26: 0/19993 scanned  
+sector 27: 0/19997 scanned  
+sector 28: 0/19994 scanned  
+sector 29: 0/19995 scanned  
+sector 3: 15993/15993 scanned  ERROR 13  KNOWN 17  NEW 3  REJECTED 15960
+sector 30: 0/19996 scanned  
+sector 31: 0/19995 scanned  
+sector 32: 0/19992 scanned  
+sector 33: 0/19991 scanned  
+sector 34: 0/19993 scanned  
+sector 35: 0/19994 scanned  
+sector 36: 0/19993 scanned  
+sector 37: 0/19991 scanned  
+sector 38: 0/19922 scanned  
+sector 39: 0/19908 scanned  
+sector 4: 19997/19997 scanned  ERROR 16  KNOWN 33  NEW 6  REJECTED 19942
+sector 40: 0/19995 scanned  
+sector 41: 0/19996 scanned  
+sector 5: 19996/19996 scanned  ERROR 3  KNOWN 42  NEW 8  REJECTED 19943
+sector 6: 19995/19995 scanned  ERROR 21  KNOWN 31  NEW 14  REJECTED 19929
+sector 7: 0/19995 scanned  
+sector 8: 0/19994 scanned  
+sector 9: 0/19996 scanned  
+
+NEW candidates (40), strongest first:
+  TIC332488398    s2  P=1.0416 d  depth=28503 ppm  snr=1530.5  snr 1530.5; sde 8.3; odd/even agree (1%); secondary 0.6% (9.0σ); ~21.2 R_earth (star 1.15 R_sun); centroid on target: dip source within 2″ (19.5σ shift)
+  TIC39818458     s6  P=3.8152 d  depth=39769 ppm  snr=1456.4  snr 1456.4; sde 8.1; odd/even agree (1%); secondary 1.8% (26.8σ); centroid on target: dip source within 0″ (2.4σ shift)
+  TIC178171080    s4  P=3.2521 d  depth=16214 ppm  snr=588.4  snr 588.4; sde 8.2; odd/even agree (8%); secondary 0.6% (4.3σ); centroid on target: dip source within 1″ (0.3σ shift)
+  TIC146559015    s5  P=2.6401 d  depth=79244 ppm  snr=458.3  snr 458.3; sde 8.6; odd/even agree (12%); secondary 0.4% (2.0σ); centroid on target: dip source within 2″ (99.0σ shift)
+  TIC32759110     s6  P=2.0383 d  depth=103967 ppm  snr=362.5  snr 362.5; sde 9.3; odd/even agree (17%); secondary -0.0% (-0.1σ); ~11.4 R_earth (star 0.32 R_sun); centroid on target: dip source within 0″ (6.3σ shift)
+  TIC237944385    s6  P=4.4254 d  depth=11136 ppm  snr=345.3  snr 345.3; sde 9.1; odd/even agree (2%); secondary 0.4% (1.4σ); ~20.5 R_earth (star 1.78 R_sun); centroid on target: dip source within 1″ (0.3σ shift)
+  TIC422844353    s4  P=6.6336 d  depth=16781 ppm  snr=334.4  snr 334.4; sde 8.2; odd/even agree (5%); secondary 1.3% (4.4σ); ~21.4 R_earth (star 1.52 R_sun); centroid on target: dip source within 1″ (0.1σ shift)
+  TIC88380001     s4  P=4.4322 d  depth=11505 ppm  snr=317.9  snr 317.9; sde 8.5; odd/even agree (0%); secondary 0.7% (1.7σ); ~19.8 R_earth (star 1.69 R_sun); centroid on target: dip source within 1″ (0.3σ shift)
+  TIC124199788    s6  P=2.3522 d  depth=45559 ppm  snr=269.5  snr 269.5; sde 9.3; odd/even agree (17%); secondary 0.0% (0.1σ); ~8.4 R_earth (star 0.36 R_sun); centroid on target: dip source within 2″ (25.0σ shift)
+  TIC114819301    s2  P=4.8868 d  depth=45788 ppm  snr=262.4  snr 262.4; sde 9.1; odd/even agree (5%); secondary 0.6% (1.3σ); ~20.1 R_earth (star 0.86 R_sun); centroid on target: dip source within 0″ (0.9σ shift)
